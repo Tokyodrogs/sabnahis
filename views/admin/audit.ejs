@@ -1,0 +1,59 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">🧾 Audit Log</h1>
+      <p class="page-sub">Chronological record of all admin actions (last 500 entries).</p>
+    </div>
+    <a class="btn btn-outline-success btn-sm"
+       href="/admin/audit?<%= new URLSearchParams(Object.assign({}, userFilter ? {user: userFilter} : {}, action ? {action: action} : {}, {format:'csv'})).toString() %>">
+      ⬇ Export CSV
+    </a>
+  </div>
+
+  <div class="card card-body mb-3">
+    <form method="get" action="/admin/audit" class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">User</label>
+        <select class="form-select" name="user">
+          <option value="">All users</option>
+          <% users.forEach(function(u) { %>
+            <option value="<%= u.id %>" <%= String(userFilter) === String(u.id) ? 'selected' : '' %>><%= u.full_name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Action contains</label>
+        <input class="form-control" name="action" value="<%= action %>" placeholder="e.g. login, approve, delete">
+      </div>
+      <div class="col-md-2"><button class="btn btn-success">Filter</button></div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Entity</th><th>Details</th><th>IP</th></tr></thead>
+        <tbody>
+          <% if (!rows.length) { %>
+            <tr><td colspan="6" class="text-center text-muted py-5">No log entries match.</td></tr>
+          <% } %>
+          <% rows.forEach(function(r) { %>
+            <tr>
+              <td class="hint text-nowrap"><%= FMTDT(r.created_at) %></td>
+              <td><strong><%= r.uname || r.user_name || 'guest' %></strong>
+                <% if (r.urole) { %><div class="hint text-capitalize"><%= r.urole.replace('_',' ') %></div><% } %></td>
+              <td><span class="badge bg-light text-dark border"><%= r.action.replace(/_/g,' ') %></span></td>
+              <td class="hint"><%= r.entity || '—' %><%= r.entity_id ? ' #' + r.entity_id : '' %></td>
+              <td class="hint" style="max-width:340px"><%= (r.details || '').slice(0, 200) %></td>
+              <td class="hint"><%= r.ip || '—' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

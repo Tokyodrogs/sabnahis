@@ -1,0 +1,94 @@
+<%- include('../partials/head') %>
+<%
+  var uploaded = {};
+  (docs || []).forEach(function(d){ uploaded[d.doc_type] = d; });
+%>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">📁 My Documents</h1>
+      <p class="page-sub">Upload and manage your enrollment requirements (PDF / JPG / PNG · max 5 MB each).</p>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" href="/dashboard">← Dashboard</a>
+  </div>
+
+  <% if (active && active.status !== 'draft') { %>
+    <div class="alert alert-secondary py-2">
+      Your application <strong><%= active.reference_no %></strong> (<%= h.STATUS_LABELS[active.status] %>) uses these documents.
+      Re-uploading replaces the previous file and marks it <em>pending</em> again.
+    </div>
+  <% } %>
+
+  <div class="card card-body">
+    <% if (!(requirements || []).length) { %>
+      <div class="text-center text-muted py-4">
+        Start your enrollment application (or early registration) to see the required documents for your grade level.
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr><th>Document</th><th>Requirement</th><th>Status</th><th style="min-width:270px">Upload / Replace</th></tr>
+          </thead>
+          <tbody>
+            <% requirements.forEach(function(r) { %>
+              <% var doc = uploaded[r.doc_type]; %>
+              <tr>
+                <td><strong><%= r.label %></strong></td>
+                <td><span class="badge <%= r.is_required ? 'bg-success' : 'bg-secondary' %>"><%= r.is_required ? 'Required' : 'Optional' %></span></td>
+                <td>
+                  <% if (doc) { %>
+                    <span class="doc-pill text-success">✔ Uploaded</span>
+                    <div class="hint"><%= h.fmtDate(doc.uploaded_at) %> · <%= (doc.size/1024).toFixed(0) %> KB · <%= doc.status %></div>
+                    <% if (doc.remarks) { %><div class="hint text-danger"><%= doc.remarks %></div><% } %>
+                  <% } else { %>
+                    <span class="doc-pill text-muted">✘ Not uploaded</span>
+                  <% } %>
+                </td>
+                <td>
+                  <input class="form-control form-control-sm" type="file" name="doc_<%= r.doc_type %>"
+                         accept=".pdf,.jpg,.jpeg,.png">
+                  <% if (doc) { %>
+                    <div class="small mt-1">
+                      <a href="/files/document/<%= doc.id %>" target="_blank">View</a> ·
+                      <form method="post" action="/documents/delete" class="d-inline" data-confirm="Remove this document?">
+                        <input type="hidden" name="doc_id" value="<%= doc.id %>">
+                        <button class="btn btn-link link-remove btn-sm p-0" type="submit">Remove</button>
+                      </form>
+                    </div>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <form method="post" action="/documents/upload" enctype="multipart/form-data" class="upload-form"
+            onsubmit="return gatherUpload(event, this)">
+        <div class="d-flex justify-content-end gap-2">
+          <a class="btn btn-outline-secondary" href="/dashboard">Back</a>
+          <button class="btn btn-success" type="submit">⬆ Upload Selected Files</button>
+        </div>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<script>
+function gatherUpload(ev, form) {
+  ev.preventDefault();
+  var fd = new FormData();
+  var any = false;
+  document.querySelectorAll('input[type=file]').forEach(function (i) {
+    if (i.files.length) { fd.append(i.name, i.files[0]); any = true; }
+  });
+  if (!any) { alert('Please choose at least one file first.'); return false; }
+  fetch('/documents/upload', { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(function () { window.location.reload(); });
+  return false;
+}
+</script>
+
+<%- include('../partials/foot') %>

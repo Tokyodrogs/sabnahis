@@ -1,0 +1,535 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">📝 Online Enrollment Application</h1>
+      <p class="page-sub">Complete all steps — your progress is saved as a draft as you go.</p>
+    </div>
+    <a href="/dashboard" class="btn btn-outline-secondary btn-sm">💾 Save &amp; Exit</a>
+  </div>
+
+  <div class="card card-body">
+    <!-- Stepper -->
+    <div class="stepper">
+      <% STEPS.forEach(function(s) { %>
+        <div class="step <%= step > s.n ? 'done' : (step === s.n ? 'current' : '') %>">
+          <div class="dot"><%= step > s.n ? '✓' : s.n %></div>
+          <span class="lbl"><%= s.label %></span>
+        </div>
+      <% }) %>
+      <div class="step <%= step === 6 ? 'current' : '' %>">
+        <div class="dot">✓</div>
+        <span class="lbl">Review</span>
+      </div>
+    </div>
+
+    <% if (error) { %>
+      <div class="alert alert-danger py-2"><strong>Please fix:</strong> <%= error %></div>
+    <% } %>
+    <% if (returnedRemarks) { %>
+      <div class="alert alert-warning py-2">
+        <strong>⚠ Returned by the registrar for correction:</strong> <%= returnedRemarks %>
+        Make the needed changes, then submit again from the Review step.
+      </div>
+    <% } %>
+
+    <!-- ============================== STEP 1 — PERSONAL =============================== -->
+    <% if (step === 1) { %>
+    <form method="post" action="/enroll/step/1">
+      <div class="section-sub">Student Personal Information</div>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label" for="first_name">First Name *</label>
+          <input class="form-control" id="first_name" name="first_name" required value="<%= student.first_name || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="middle_name">Middle Name</label>
+          <input class="form-control" id="middle_name" name="middle_name" value="<%= student.middle_name || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="last_name">Last Name *</label>
+          <input class="form-control" id="last_name" name="last_name" required value="<%= student.last_name || '' %>">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="suffix">Suffix (Jr., III)</label>
+          <input class="form-control" id="suffix" name="suffix" value="<%= student.suffix || '' %>" placeholder="optional">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="birthdate">Birthdate *</label>
+          <input class="form-control" id="birthdate" name="birthdate" type="date" required value="<%= student.birthdate || '' %>">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="gender">Gender *</label>
+          <select class="form-select" id="gender" name="gender" required>
+            <option value="">— select —</option>
+            <option value="male" <%= student.gender === 'male' ? 'selected' : '' %>>Male</option>
+            <option value="female" <%= student.gender === 'female' ? 'selected' : '' %>>Female</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="civil_status">Civil Status</label>
+          <select class="form-select" id="civil_status" name="civil_status">
+            <option value="">— select —</option>
+            <% ['single','married','widowed','separated'].forEach(function(cs) { %>
+              <option value="<%= cs %>" <%= student.civil_status === cs ? 'selected' : '' %>><%= cs.charAt(0).toUpperCase() + cs.slice(1) %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="nationality">Nationality</label>
+          <input class="form-control" id="nationality" name="nationality" value="<%= student.nationality || 'Filipino' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="religion">Religion</label>
+          <input class="form-control" id="religion" name="religion" value="<%= student.religion || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="contact_number">Contact Number *</label>
+          <input class="form-control" id="contact_number" name="contact_number" required
+                 value="<%= student.contact_number || '' %>" placeholder="09XX XXX XXXX">
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="home_address">Home Address *</label>
+          <input class="form-control" id="home_address" name="home_address" required
+                 value="<%= student.home_address || '' %>" placeholder="House no., Street, Barangay, City/Municipality, Province">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="psa_birth_cert_no">PSA Birth Certificate No.</label>
+          <input class="form-control" id="psa_birth_cert_no" name="psa_birth_cert_no"
+                 value="<%= student.psa_birth_cert_no || '' %>" placeholder="0000-0000-0000-0000">
+          <div class="hint">As printed on the PSA certificate (if available).</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="lrn">Learner Reference Number (LRN)</label>
+          <input class="form-control" id="lrn" name="lrn" pattern="\d{12}" maxlength="12"
+                 value="<%= student.lrn || '' %>" placeholder="12 digits — leave blank if none">
+          <div class="hint">Format: exactly 12 digits. Required for transferees / students who already have an LRN.</div>
+        </div>
+      </div>
+
+      <div class="section-sub">Enrollment Type</div>
+      <div class="btn-group" role="group" aria-label="Enrollment type">
+        <input type="radio" class="btn-check" name="enrollment_type" id="et-new" value="new"
+               <%= student.enrollment_type === 'new' ? 'checked' : '' %>>
+        <label class="btn btn-outline-success" for="et-new">NEW (Grade 7 / Grade 11 completer)</label>
+        <input type="radio" class="btn-check" name="enrollment_type" id="et-tr" value="transferee"
+               <%= student.enrollment_type === 'transferee' ? 'checked' : '' %>>
+        <label class="btn btn-outline-success" for="et-tr">TRANSFEREE</label>
+      </div>
+      <div class="hint mt-1">Returning SABNAHIS students should use <a href="/early">Early Registration</a> instead.</div>
+
+      <div class="d-flex justify-content-between mt-4">
+        <a href="/dashboard" class="btn btn-outline-secondary">← Dashboard</a>
+        <button class="btn btn-success px-4 fw-bold" type="submit">Save &amp; Continue →</button>
+      </div>
+    </form>
+
+    <!-- ============================== STEP 2 — PARENTS ================================= -->
+    <% } else if (step === 2) { %>
+    <%
+      function g(rel) { return (guardians || []).find(function(x){ return x.relationship === rel; }) || {}; }
+      var mother = g('mother'), father = g('father'), guardian = g('guardian');
+      var hasGuardian = guardian && guardian.first_name;
+    %>
+    <form method="post" action="/enroll/step/2">
+      <div class="section-sub">Mother</div>
+      <div class="row g-3">
+        <div class="col-md-4"><label class="form-label">First Name *</label>
+          <input class="form-control" name="mother_first" required value="<%= mother.first_name || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Middle Name</label>
+          <input class="form-control" name="mother_middle" value="<%= mother.middle_name || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Last Name *</label>
+          <input class="form-control" name="mother_last" required value="<%= mother.last_name || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Occupation</label>
+          <input class="form-control" name="mother_occupation" value="<%= mother.occupation || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Contact Number</label>
+          <input class="form-control" name="mother_contact" value="<%= mother.contact_number || '' %>" placeholder="09XX XXX XXXX"></div>
+        <div class="col-md-4"><label class="form-label">Email (optional)</label>
+          <input class="form-control" type="email" name="mother_email" value="<%= mother.email || '' %>"></div>
+        <div class="col-12"><label class="form-label">Address (if different from student)</label>
+          <input class="form-control" name="mother_address" value="<%= mother.address || '' %>"></div>
+      </div>
+
+      <div class="section-sub">Father</div>
+      <div class="row g-3">
+        <div class="col-md-4"><label class="form-label">First Name *</label>
+          <input class="form-control" name="father_first" required value="<%= father.first_name || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Middle Name</label>
+          <input class="form-control" name="father_middle" value="<%= father.middle_name || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Last Name *</label>
+          <input class="form-control" name="father_last" required value="<%= father.last_name || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Occupation</label>
+          <input class="form-control" name="father_occupation" value="<%= father.occupation || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Contact Number</label>
+          <input class="form-control" name="father_contact" value="<%= father.contact_number || '' %>" placeholder="09XX XXX XXXX"></div>
+        <div class="col-md-4"><label class="form-label">Email (optional)</label>
+          <input class="form-control" type="email" name="father_email" value="<%= father.email || '' %>"></div>
+        <div class="col-12"><label class="form-label">Address (if different from student)</label>
+          <input class="form-control" name="father_address" value="<%= father.address || '' %>"></div>
+      </div>
+
+      <div class="section-sub">Guardian (if applicable)</div>
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" name="has_guardian" id="hasGuardian" value="yes"
+               <%= hasGuardian ? 'checked' : '' %>>
+        <label class="form-check-label" for="hasGuardian">I have a guardian (student lives with someone else)</label>
+      </div>
+      <div class="row g-3" id="guardianFields">
+        <div class="col-md-4"><label class="form-label">First Name</label>
+          <input class="form-control" name="guardian_first" value="<%= guardian.first_name || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Middle Name</label>
+          <input class="form-control" name="guardian_middle" value="<%= guardian.middle_name || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Last Name</label>
+          <input class="form-control" name="guardian_last" value="<%= guardian.last_name || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Occupation</label>
+          <input class="form-control" name="guardian_occupation" value="<%= guardian.occupation || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Contact Number</label>
+          <input class="form-control" name="guardian_contact" value="<%= guardian.contact_number || '' %>"></div>
+        <div class="col-md-4"><label class="form-label">Email</label>
+          <input class="form-control" type="email" name="guardian_email" value="<%= guardian.email || '' %>"></div>
+        <div class="col-12"><label class="form-label">Address</label>
+          <input class="form-control" name="guardian_address" value="<%= guardian.address || '' %>"></div>
+      </div>
+
+      <div class="d-flex justify-content-between mt-4">
+        <a href="/enroll?step=1" class="btn btn-outline-secondary">← Back</a>
+        <button class="btn btn-success px-4 fw-bold" type="submit">Save &amp; Continue →</button>
+      </div>
+    </form>
+
+    <!-- ====================== STEP 3 — EDUCATIONAL BACKGROUND ========================= -->
+    <% } else if (step === 3) { %>
+    <form method="post" action="/enroll/step/3">
+      <div class="section-sub">
+        <%= student.enrollment_type === 'transferee' ? 'Previous School (Transferee)' :
+           (student.enrollment_type === 'returning' ? 'School Last Attended' : 'School Completed') %>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-7">
+          <label class="form-label">Elementary / Junior High School Completed *</label>
+          <input class="form-control" name="last_school_name" required
+                 value="<%= edu && edu.last_school_name ? edu.last_school_name : '' %>"
+                 placeholder="e.g. Imus Central Elementary School">
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">School Address</label>
+          <input class="form-control" name="last_school_address"
+                 value="<%= edu && edu.last_school_address ? edu.last_school_address : '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">School Year Graduated / Completed *</label>
+          <input class="form-control" name="school_year_graded" required
+                 value="<%= edu && edu.school_year_graded ? edu.school_year_graded : '' %>"
+                 placeholder="e.g. 2025-2026">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">General Average</label>
+          <input class="form-control" name="general_average"
+                 value="<%= edu && edu.general_average ? edu.general_average : '' %>"
+                 placeholder="e.g. 88.5">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Grade Level Completed *</label>
+          <select class="form-select" name="grade_completed" required>
+            <option value="">— select —</option>
+            <% ['Grade 6','Grade 10','Grade 8','Grade 9','Grade 11'].forEach(function(gc) { %>
+              <option value="<%= gc %>" <%= edu && edu.grade_completed === gc ? 'selected' : '' %>><%= gc %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <% if (student.enrollment_type === 'transferee') { %>
+        <div class="section-sub">Transfer Details</div>
+        <div class="mb-3">
+          <label class="form-label">Reason for Transferring *</label>
+          <textarea class="form-control" name="reason_for_transfer" rows="3" required
+                    placeholder="Briefly explain why you are transferring…"><%= edu && edu.reason_for_transfer ? edu.reason_for_transfer : '' %></textarea>
+        </div>
+      <% } else { %>
+        <div class="mb-3 mt-3">
+          <label class="form-label">Reason for Transferring (optional)</label>
+          <textarea class="form-control" name="reason_for_transfer" rows="2"><%= edu && edu.reason_for_transfer ? edu.reason_for_transfer : '' %></textarea>
+        </div>
+      <% } %>
+
+      <div class="d-flex justify-content-between mt-4">
+        <a href="/enroll?step=2" class="btn btn-outline-secondary">← Back</a>
+        <button class="btn btn-success px-4 fw-bold" type="submit">Save &amp; Continue →</button>
+      </div>
+    </form>
+
+    <!-- ====================== STEP 4 — GRADE LEVEL & STRAND =========================== -->
+    <% } else if (step === 4) { %>
+    <form method="post" action="/enroll/step/4">
+      <div class="section-sub">Grade Level &amp; Track / Strand</div>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Grade Level to Enroll In *</label>
+          <select class="form-select" name="grade_level_id" id="gradeSelect" required>
+            <option value="">— select grade level —</option>
+            <% grades.forEach(function(gl) { %>
+              <option value="<%= gl.id %>" data-dept="<%= gl.department %>"
+                <%= app && app.grade_level_id === gl.id ? 'selected' : '' %>><%= gl.name %></option>
+            <% }) %>
+          </select>
+          <div class="hint">Junior High: Grades 7–10 · Senior High: Grades 11–12</div>
+        </div>
+        <div class="col-md-6" id="strandWrap">
+          <label class="form-label">Track / Strand (SHS only) <span id="strandReq">*</span></label>
+          <select class="form-select" name="strand_id" id="strandSelect">
+            <option value="">— not applicable —</option>
+            <% strands.forEach(function(st) { %>
+              <option value="<%= st.id %>" <%= app && app.strand_id === st.id ? 'selected' : '' %>>
+                <%= st.code %> — <%= st.name %>
+              </option>
+            <% }) %>
+          </select>
+          <div class="hint">STEM · ABM · HUMSS · GAS · TVL — as offered by the school.</div>
+        </div>
+      </div>
+
+      <div class="assigned-section mt-3">
+        <strong>📍 Section:</strong> A section will be <em>assigned by the registrar</em> after your application is approved
+        (based on availability and capacity).
+      </div>
+
+      <div class="section-sub">Estimated Fees for Selected Grade / Strand</div>
+      <div class="table-responsive">
+        <table class="table table-sm" id="feeTable">
+          <thead><tr><th>Fee</th><th>Category</th><th class="text-end">Amount</th></tr></thead>
+          <tbody></tbody>
+          <tfoot><tr><th colspan="2">Estimated Total</th><th class="text-end" id="feeTotal">₱0.00</th></tr></tfoot>
+        </table>
+      </div>
+      <div class="hint">Final assessment is issued by the registrar/cashier upon approval.</div>
+
+      <div class="d-flex justify-content-between mt-4">
+        <a href="/enroll?step=3" class="btn btn-outline-secondary">← Back</a>
+        <button class="btn btn-success px-4 fw-bold" type="submit">Save &amp; Continue →</button>
+      </div>
+    </form>
+
+    <!-- ====================== STEP 5 — REQUIREMENTS UPLOAD =========================== -->
+    <% } else if (step === 5) { %>
+    <div class="section-sub">Requirements Checklist</div>
+    <p class="hint">Accepted formats: <strong>PDF, JPG, PNG</strong> · Max <strong>5 MB</strong> per file.
+      Documents are reviewed by the registrar.</p>
+
+    <% var uploadedTypes = {}; (docs || []).forEach(function(d){ uploadedTypes[d.doc_type] = d; }); %>
+
+    <div class="table-responsive mb-3">
+      <table class="table align-middle">
+        <thead>
+          <tr><th>Required Document</th><th>Required?</th><th>Status</th><th style="min-width:260px">Upload / Replace</th></tr>
+        </thead>
+        <tbody>
+          <% (requirements || []).forEach(function(r) { %>
+            <% var doc = uploadedTypes[r.doc_type]; %>
+            <tr>
+              <td><strong><%= r.label %></strong></td>
+              <td><span class="badge <%= r.is_required ? 'bg-success' : 'bg-secondary' %>"><%= r.is_required ? 'Required' : 'Optional' %></span></td>
+              <td>
+                <% if (doc) { %>
+                  <span class="doc-pill text-success">✔ Uploaded
+                    <small class="text-muted">(<%= doc.status %>)</small>
+                  </span>
+                  <div class="small">
+                    <a href="/files/document/<%= doc.id %>" target="_blank">View</a> ·
+                    <form method="post" action="/enroll/doc/delete" class="d-inline"
+                          data-confirm="Remove this document?">
+                      <input type="hidden" name="doc_id" value="<%= doc.id %>">
+                      <button class="btn btn-link link-remove btn-sm p-0" type="submit">Remove</button>
+                    </form>
+                  </div>
+                <% } else { %>
+                  <span class="doc-pill text-muted">✘ Not yet uploaded</span>
+                <% } %>
+              </td>
+              <td>
+                <input class="form-control form-control-sm" type="file" name="doc_<%= r.doc_type %>"
+                       accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-secondary py-2" style="font-size:.8rem">
+      💡 Select files in the table rows above, then click <strong>Upload Selected Files</strong>.
+    </div>
+
+    <form method="post" action="/enroll/step/5" enctype="multipart/form-data" class="upload-form"
+          id="step5Form" onsubmit="return gatherStep5(event)">
+      <div id="step5Files" class="d-none"></div>
+      <div class="d-flex justify-content-between mt-3">
+        <a href="/enroll?step=4" class="btn btn-outline-secondary">← Back</a>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-success" type="submit">⬆ Upload Selected Files</button>
+          <a class="btn btn-success px-4 fw-bold" href="/enroll/review">Save &amp; Review →</a>
+        </div>
+      </div>
+    </form>
+
+    <!-- ================================ REVIEW ======================================= -->
+    <% } else { %>
+    <%
+      var mother = (guardians || []).find(function(x){ return x.relationship === 'mother'; });
+      var father = (guardians || []).find(function(x){ return x.relationship === 'father'; });
+      var guardian = (guardians || []).find(function(x){ return x.relationship === 'guardian'; });
+      var gradeName = grades.find(function(g){ return app && g.id === app.grade_level_id; });
+      var strandName = strands.find(function(s){ return app && s.id === app.strand_id; });
+      var uploadedTypes = {}; (docs || []).forEach(function(d){ uploadedTypes[d.doc_type] = d; });
+      var missingDocs = (requirements || []).filter(function(r){ return r.is_required && !uploadedTypes[r.doc_type]; });
+    %>
+    <div class="section-sub">1 · Personal Information</div>
+    <div class="row small mb-2">
+      <div class="col-md-6"><strong>Name:</strong> <%= h.fullName(student) %></div>
+      <div class="col-md-3"><strong>Birthdate:</strong> <%= h.fmtDate(student.birthdate) %></div>
+      <div class="col-md-3"><strong>Gender:</strong> <%= student.gender || '—' %></div>
+      <div class="col-md-6"><strong>LRN:</strong> <%= student.lrn || 'none / to be assigned' %></div>
+      <div class="col-md-6"><strong>PSA Birth Cert:</strong> <%= student.psa_birth_cert_no || '—' %></div>
+      <div class="col-md-6"><strong>Contact:</strong> <%= student.contact_number || '—' %></div>
+      <div class="col-md-12"><strong>Address:</strong> <%= student.home_address || '—' %></div>
+      <div class="col-md-6 mt-1"><strong>Type:</strong> <span class="text-uppercase"><%= student.enrollment_type %></span></div>
+    </div>
+
+    <div class="section-sub">2 · Parent / Guardian</div>
+    <div class="row small mb-2">
+      <div class="col-md-6"><strong>Mother:</strong> <%= mother ? h.fullName(mother) : '—' %>
+        <% if (mother && mother.occupation) { %><div class="hint"><%= mother.occupation %> · <%= mother.contact_number || '' %></div><% } %></div>
+      <div class="col-md-6"><strong>Father:</strong> <%= father ? h.fullName(father) : '—' %>
+        <% if (father && father.occupation) { %><div class="hint"><%= father.occupation %> · <%= father.contact_number || '' %></div><% } %></div>
+      <% if (guardian) { %>
+        <div class="col-md-6 mt-2"><strong>Guardian:</strong> <%= h.fullName(guardian) %>
+          <div class="hint"><%= guardian.occupation || '' %> · <%= guardian.contact_number || '' %></div></div>
+      <% } %>
+    </div>
+
+    <div class="section-sub">3 · Educational Background</div>
+    <div class="row small mb-2">
+      <div class="col-md-6"><strong>School:</strong> <%= edu ? edu.last_school_name : '—' %></div>
+      <div class="col-md-3"><strong>S.Y. Completed:</strong> <%= edu ? edu.school_year_graded : '—' %></div>
+      <div class="col-md-3"><strong>Average:</strong> <%= edu && edu.general_average ? edu.general_average : '—' %></div>
+      <div class="col-md-6"><strong>Grade Completed:</strong> <%= edu ? edu.grade_completed : '—' %></div>
+      <% if (edu && edu.reason_for_transfer) { %>
+        <div class="col-md-12"><strong>Reason for transfer:</strong> <%= edu.reason_for_transfer %></div>
+      <% } %>
+    </div>
+
+    <div class="section-sub">4 · Grade Level &amp; Strand</div>
+    <div class="row small mb-2">
+      <div class="col-md-6"><strong>Grade Level:</strong> <%= gradeName ? gradeName.name : '—' %></div>
+      <div class="col-md-6"><strong>Strand:</strong> <%= strandName ? strandName.code + ' — ' + strandName.name : 'N/A (JHS)' %></div>
+      <% if (assessment && assessment.total) { %>
+        <div class="col-md-6 mt-1"><strong>Estimated fees:</strong> <%= h.peso(assessment.total) %></div>
+      <% } %>
+    </div>
+
+    <div class="section-sub">5 · Requirements</div>
+    <ul class="list-unstyled small mb-2">
+      <% (requirements || []).forEach(function(r) { %>
+        <li class="mb-1">
+          <% if (uploadedTypes[r.doc_type]) { %>
+            <span class="text-success">✔</span>
+          <% } else { %>
+            <span class="<%= r.is_required ? 'text-danger' : 'text-muted' %>"><%= r.is_required ? '✘' : '○' %></span>
+          <% } %>
+          <%= r.label %>
+          <% if (uploadedTypes[r.doc_type]) { %>
+            — <a href="/files/document/<%= uploadedTypes[r.doc_type].id %>" target="_blank">view file</a>
+          <% } else if (r.is_required) { %>
+            <span class="badge bg-danger">missing</span>
+          <% } %>
+        </li>
+      <% }) %>
+    </ul>
+
+    <% if (missingDocs.length) { %>
+      <div class="alert alert-danger py-2">
+        <strong>Missing required documents:</strong> <%= missingDocs.map(function(r){ return r.label; }).join(', ') %>.
+        <a href="/enroll?step=5">Go back to upload →</a>
+      </div>
+    <% } %>
+
+    <form method="post" action="/enroll/submit" data-confirm="Submit your enrollment application? You can no longer edit it while it is under review.">
+      <div class="d-flex justify-content-between mt-4">
+        <a href="/enroll?step=5" class="btn btn-outline-secondary">← Back to Requirements</a>
+        <button class="btn btn-success px-5 fw-bold" type="submit"
+          <%= missingDocs.length ? 'disabled' : '' %>>✔ Review &amp; Submit Application</button>
+      </div>
+    </form>
+    <% } %>
+  </div>
+</div>
+
+<script>
+  // ---- Step 4: strand visibility + live fee preview ----
+  (function () {
+    var fees = <%- feesJson %>;
+    var gradeSel = document.getElementById('gradeSelect');
+    var strandSel = document.getElementById('strandSelect');
+    if (!gradeSel) return;
+
+    function peso(n) { return '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+    function update() {
+      var opt = gradeSel.options[gradeSel.selectedIndex];
+      var isShs = opt && opt.dataset.dept === 'shs';
+      document.getElementById('strandWrap').style.display = isShs ? '' : 'none';
+      if (strandSel) strandSel.required = !!isShs;
+
+      var gradeId = Number(gradeSel.value);
+      var strandId = strandSel && strandSel.value ? Number(strandSel.value) : null;
+      var tbody = document.querySelector('#feeTable tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      var total = 0;
+      if (!gradeId) { document.getElementById('feeTotal').textContent = peso(0); return; }
+      fees.filter(function (f) {
+        if (f.grade_level_id && Number(f.grade_level_id) !== gradeId) return false;
+        if (f.strand_id && strandId && Number(f.strand_id) !== strandId) return false;
+        if (f.strand_id && !strandId) return false;
+        return true;
+      }).forEach(function (f) {
+        total += Number(f.amount);
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + f.name + '</td><td class="text-capitalize">' + f.category + '</td>' +
+          '<td class="text-end">' + peso(f.amount) + '</td>';
+        tbody.appendChild(tr);
+      });
+      document.getElementById('feeTotal').textContent = peso(total);
+    }
+    gradeSel.addEventListener('change', update);
+    if (strandSel) strandSel.addEventListener('change', update);
+    update();
+  })();
+
+  // ---- Step 5: gather file inputs into one multipart submit ----
+  function gatherStep5(ev) {
+    var form = document.getElementById('step5Form');
+    var fd = new FormData();
+    var any = false;
+    form.querySelectorAll('input[type=file]').forEach(function (i) {
+      if (i.files.length) { fd.append(i.name, i.files[0]); any = true; }
+    });
+    if (!any) { ev.preventDefault(); alert('Please choose at least one file to upload.'); return false; }
+    ev.preventDefault();
+    fetch('/enroll/step/5', { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(function (r) { window.location.reload(); });
+    return false;
+  }
+
+  // Toggle guardian fields based on checkbox
+  (function () {
+    var cb = document.getElementById('hasGuardian');
+    if (!cb) return;
+    var fields = document.getElementById('guardianFields');
+    function sync() { fields.style.opacity = cb.checked ? '1' : '.45'; }
+    cb.addEventListener('change', sync); sync();
+  })();
+</script>
+
+<%- include('../partials/foot') %>

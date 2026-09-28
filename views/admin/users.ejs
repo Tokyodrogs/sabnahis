@@ -1,0 +1,91 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">🔐 Users &amp; Role Management</h1>
+      <p class="page-sub">Create accounts and control what each role can access.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">+ Create User</div>
+    <div class="card-body">
+      <form method="post" action="/admin/users/save" class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label">Full Name *</label>
+          <input class="form-control form-control-sm" name="full_name" required></div>
+        <div class="col-md-2"><label class="form-label">Username *</label>
+          <input class="form-control form-control-sm" name="login_id" required placeholder="e.g. registrar2"></div>
+        <div class="col-md-3"><label class="form-label">Email</label>
+          <input class="form-control form-control-sm" type="email" name="email"></div>
+        <div class="col-md-2"><label class="form-label">Role *</label>
+          <select class="form-select form-select-sm" name="role">
+            <% roles.forEach(function(r) { %><option value="<%= r[0] %>"><%= r[1].split('—')[0].trim() %></option><% }) %>
+          </select></div>
+        <div class="col-md-2"><label class="form-label">Initial Password * (min 8)</label>
+          <input class="form-control form-control-sm" type="password" name="password" minlength="8" required></div>
+        <div class="col-12 hint">Roles: Super Admin (everything) · Registrar (applicants, enrollment, academics, reports) ·
+          Cashier (payments &amp; collections) · Adviser (own class lists) · Applicant (student portal).</div>
+        <div class="col-md-2 d-grid"><button class="btn btn-success btn-sm">Create</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th class="text-end">Actions</th></tr>
+        </thead>
+        <tbody>
+          <% rows.forEach(function(u) { %>
+            <tr class="<%= u.status === 'disabled' ? 'table-secondary' : '' %>">
+              <td><strong><%= u.full_name %></strong>
+                <% if (u.id === me) { %><span class="badge bg-success">you</span><% } %></td>
+              <td><code><%= u.login_id %></code></td>
+              <td class="hint"><%= u.email || '—' %></td>
+              <td>
+                <form method="post" action="/admin/users/save" id="ur_<%= u.id %>" class="d-none">
+                  <input type="hidden" name="id" value="<%= u.id %>">
+                </form>
+                <select class="form-select form-select-sm" form="ur_<%= u.id %>" name="role">
+                  <% roles.forEach(function(r) { %>
+                    <option value="<%= r[0] %>" <%= u.role === r[0] ? 'selected' : '' %>><%= r[0].replace('_',' ') %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td><span class="badge bg-<%= u.status === 'active' ? 'success' : 'danger' %>"><%= u.status %></span></td>
+              <td class="hint"><%= u.last_login ? FMTDT(u.last_login) : 'never' %></td>
+              <td class="text-end text-nowrap">
+                <button class="btn btn-outline-success btn-sm" form="ur_<%= u.id %>" type="submit">Save Role</button>
+                <% if (u.id !== me) { %>
+                  <button class="btn btn-outline-warning btn-sm" type="button" data-bs-toggle="collapse"
+                          data-bs-target="#pw<%= u.id %>">Reset PW</button>
+                  <form method="post" action="/admin/users/<%= u.id %>/toggle" class="d-inline"
+                        data-confirm="<%= u.status === 'active' ? 'Disable this account?' : 'Reactivate this account?' %>">
+                    <button class="btn btn-<%= u.status === 'active' ? 'outline-danger' : 'outline-success' %> btn-sm" type="submit">
+                      <%= u.status === 'active' ? 'Disable' : 'Enable' %>
+                    </button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+            <tr class="collapse" id="pw<%= u.id %>">
+              <td colspan="7" class="bg-light">
+                <form method="post" action="/admin/users/<%= u.id %>/reset-password" class="row g-2 align-items-end">
+                  <div class="col-md-3">
+                    <label class="form-label">New password for <%= u.full_name %> (min 8 chars)</label>
+                    <input class="form-control form-control-sm" type="password" name="password" minlength="8" required>
+                  </div>
+                  <div class="col-md-2"><button class="btn btn-success btn-sm">Reset Password</button></div>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

@@ -1,0 +1,118 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">📈 Reports</h1>
+      <p class="page-sub">Enrollment statistics, class lists and collection reports — printable &amp; exportable.</p>
+    </div>
+    <% if (headers && headers.length) { %>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-success btn-sm"
+           href="/admin/reports?<%= new URLSearchParams(Object.assign({}, {type: type}, query.section_id ? {section_id: query.section_id} : {}, {format: 'csv'})).toString() %>">
+          ⬇ Export CSV (Excel)
+        </a>
+        <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">🖨 Print</button>
+      </div>
+    <% } %>
+  </div>
+
+  <ul class="nav nav-pills tab-nav mb-3 flex-wrap gap-1">
+    <% types.forEach(function(t) { %>
+      <li class="nav-item">
+        <a class="nav-link <%= type === t[0] ? 'active' : '' %>" href="/admin/reports?type=<%= t[0] %>"><%= t[1] %></a>
+      </li>
+    <% }) %>
+  </ul>
+
+  <% if (type === 'class-list') { %>
+    <div class="card card-body mb-3">
+      <form method="get" action="/admin/reports" class="row g-2 align-items-end">
+        <input type="hidden" name="type" value="class-list">
+        <div class="col-md-5">
+          <label class="form-label">Select Section</label>
+          <select class="form-select" name="section_id" onchange="this.form.submit()">
+            <% sections.forEach(function(s) { %>
+              <option value="<%= s.id %>" <%= locals.selectedSection && selectedSection.id === s.id ? 'selected' : '' %>>
+                <%= s.grade_name %> – <%= s.name %><%= s.strand_code ? ' (' + s.strand_code + ')' : '' %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-success">Load Class List</button>
+        </div>
+        <% if (isAdviser) { %>
+          <div class="col-12 hint">As an adviser you only see sections assigned to you.</div>
+        <% } %>
+      </form>
+    </div>
+  <% } %>
+
+  <div class="card">
+    <div class="card-header">
+      <%= (types.find(function(t){ return t[0] === type; }) || ['', 'Report'])[1] %>
+      <% if (sy) { %> — SY <%= sy.name %><% } %>
+      <% if (type === 'collection' && locals.totals) { %>
+        <span class="float-end hint fw-normal">
+          Verified: <strong class="text-success"><%= PAY(totals.verified) %></strong> ·
+          Pending: <strong class="text-warning"><%= PAY(totals.pending) %></strong> ·
+          Rejected: <strong class="text-danger"><%= PAY(totals.rejected) %></strong>
+        </span>
+      <% } %>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr><th>#</th><% headers.forEach(function(hh) { %><th><%= hh %></th><% }) %></tr>
+        </thead>
+        <tbody>
+          <% if (!rows || !rows.length) { %>
+            <tr><td colspan="<%= (headers ? headers.length : 1) + 1 %>" class="text-center text-muted py-5">
+              No data for this report yet.
+            </td></tr>
+          <% } %>
+          <% (rows || []).forEach(function(r, i) { %>
+            <tr>
+              <td class="hint"><%= i + 1 %></td>
+              <% r.forEach(function(cell) { %><td><%= cell %></td><% }) %>
+            </tr>
+          <% }) %>
+        </tbody>
+        <% if (type === 'by-grade' && rows && rows.length) { %>
+          <tfoot>
+            <tr class="table-success fw-bold">
+              <td></td>
+              <td>TOTAL</td>
+              <% for (var c = 1; c < headers.length; c++) { %>
+                <td><%= rows.reduce(function(a, r) { return a + (Number(r[c]) || 0); }, 0) %></td>
+              <% } %>
+            </tr>
+          </tfoot>
+        <% } %>
+      </table>
+    </div>
+    <% if (type === 'class-list' && locals.selectedSection) { %>
+      <div class="card-body">
+        <div class="row small">
+          <div class="col-md-6">
+            <strong>Section:</strong> <%= selectedSection.grade_name %> – <%= selectedSection.name %><br>
+            <strong>Adviser:</strong> <%= selectedSection.adviser_name || 'TBA' %><br>
+            <strong>SY:</strong> <%= sy ? sy.name : '—' %>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <strong>Total students:</strong> <%= (rows || []).length %> / <%= selectedSection.capacity %> capacity
+          </div>
+        </div>
+        <div class="sig-row" style="margin-top:2.5rem">
+          <div class="sig"><div class="name"><%= selectedSection.adviser_name || '____________________' %></div>
+            <div class="role">Class Adviser</div></div>
+          <div class="sig"><div class="name">____________________</div><div class="role">Registrar</div></div>
+          <div class="sig"><div class="name">____________________</div><div class="role">Principal</div></div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

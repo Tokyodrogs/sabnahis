@@ -1,0 +1,179 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">📊 Admin Dashboard</h1>
+      <p class="page-sub">School Year <strong><%= sy ? sy.name : '—' %></strong> · Enrollment overview</p>
+    </div>
+    <a class="btn btn-outline-success btn-sm" href="/admin/reports">📈 Full Reports →</a>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card bg-brand">
+        <span class="ico">🎓</span>
+        <div class="num"><%= totalEnrollees %></div>
+        <div class="lbl">Total Enrollees</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card bg-brand2">
+        <span class="ico">⏳</span>
+        <div class="num"><%= pending %></div>
+        <div class="lbl">Pending Applications</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card bg-brand3">
+        <span class="ico">💰</span>
+        <div class="num"><%= pendingPayments %></div>
+        <div class="lbl">Payments to Verify</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card bg-brand4">
+        <span class="ico">✅</span>
+        <div class="num"><%= enrolled %></div>
+        <div class="lbl">Officially Enrolled</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <!-- Chart: enrollees per grade -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header">Enrollees per Grade Level</div>
+        <div class="card-body"><canvas id="gradeChart" height="220"></canvas></div>
+      </div>
+    </div>
+    <!-- Chart: new vs transferee vs returning -->
+    <div class="col-lg-3">
+      <div class="card h-100">
+        <div class="card-header">Applicant Type</div>
+        <div class="card-body"><canvas id="typeChart" height="220"></canvas></div>
+      </div>
+    </div>
+    <!-- Chart: status -->
+    <div class="col-lg-3">
+      <div class="card h-100">
+        <div class="card-header">By Status</div>
+        <div class="card-body"><canvas id="statusChart" height="220"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Recent applications -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between">
+          <span>Recent Applications</span>
+          <a class="small" href="/admin/applicants">View all →</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>Ref No</th><th>Student</th><th>Grade</th><th>Status</th></tr></thead>
+            <tbody>
+              <% if (!recentApps.length) { %>
+                <tr><td colspan="4" class="text-center text-muted py-4">No applications yet.</td></tr>
+              <% } %>
+              <% recentApps.forEach(function(a) { %>
+                <tr>
+                  <td><a href="/admin/applicants/<%= a.id %>"><strong><%= a.reference_no %></strong></a></td>
+                  <td><%= a.first_name %> <%= a.last_name %>
+                    <div class="hint"><%= a.enrollment_type %> · <%= FMTD(a.submitted_at) %></div></td>
+                  <td><%= a.grade_name %></td>
+                  <td><span class="status-badge bg-<%= STATUS_COLORS[a.status] %>"><%= STATUS_LABELS[a.status] %></span></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent activity -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between">
+          <span>Recent Activity</span>
+          <% if (user.role === 'super_admin') { %><a class="small" href="/admin/audit">Audit log →</a><% } %>
+        </div>
+        <div class="list-group list-group-flush" style="max-height:340px; overflow:auto">
+          <% if (!recentActivity.length) { %>
+            <div class="list-group-item text-center text-muted py-4">No activity recorded yet.</div>
+          <% } %>
+          <% recentActivity.forEach(function(a) { %>
+            <div class="list-group-item py-2">
+              <div class="d-flex justify-content-between">
+                <span class="small"><strong><%= a.uname || a.user_name || 'guest' %></strong> —
+                  <%= a.action.replace(/_/g,' ') %>
+                  <% if (a.entity) { %><span class="text-muted">(<%= a.entity %><%= a.entity_id ? ' #' + a.entity_id : '' %>)</span><% } %>
+                </span>
+                <span class="hint"><%= FMTDT(a.created_at) %></span>
+              </div>
+              <% if (a.details) { %><div class="hint"><%= a.details.slice(0,120) %></div><% } %>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var DASH_DATA = <%- chartData %>;
+  window.addEventListener('load', function () {
+    if (typeof Chart === 'undefined') return;
+    Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+    var greens = ['#14532d','#15803d','#16a34a','#22c55e','#4ade80','#86efac','#bbf7d0'];
+
+    new Chart(document.getElementById('gradeChart'), {
+      type: 'bar',
+      data: {
+        labels: DASH_DATA.byGrade.map(function (g) { return g.name; }),
+        datasets: [{
+          label: 'Enrollees',
+          data: DASH_DATA.byGrade.map(function (g) { return g.count; }),
+          backgroundColor: '#16a34a', borderRadius: 6,
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    });
+
+    new Chart(document.getElementById('typeChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['New', 'Transferee', 'Returning'],
+        datasets: [{
+          data: [DASH_DATA.typeMap.new, DASH_DATA.typeMap.transferee, DASH_DATA.typeMap.returning],
+          backgroundColor: ['#15803d', '#0ea5e9', '#f59e0b'],
+        }]
+      },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    var statusLabels = {
+      submitted: 'Submitted', under_review: 'Under Review', returned: 'Returned',
+      approved: 'For Assessment', enrolled: 'Enrolled', rejected: 'Rejected', draft: 'Draft'
+    };
+    var st = DASH_DATA.byStatus.filter(function (s) { return s.status !== 'draft'; });
+    new Chart(document.getElementById('statusChart'), {
+      type: 'pie',
+      data: {
+        labels: st.map(function (s) { return statusLabels[s.status] || s.status; }),
+        datasets: [{ data: st.map(function (s) { return s.c; }), backgroundColor: greens }]
+      },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+  });
+</script>
+
+<%- include('../partials/foot') %>

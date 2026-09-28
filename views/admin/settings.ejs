@@ -1,0 +1,108 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">⚙️ Settings</h1>
+      <p class="page-sub">School information, branding, deadlines and instructions shown on the portal.</p>
+    </div>
+  </div>
+
+  <form method="post" action="/admin/settings">
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header">School Information</div>
+          <div class="card-body">
+            <div class="mb-2">
+              <label class="form-label">School Name</label>
+              <input class="form-control" name="school_name" value="<%= s.school_name || '' %>">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Tagline</label>
+              <input class="form-control" name="school_tagline" value="<%= s.school_tagline || '' %>">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">System Title</label>
+              <input class="form-control" name="system_title" value="<%= s.system_title || '' %>">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Address</label>
+              <input class="form-control" name="school_address" value="<%= s.school_address || '' %>">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Contact</label>
+              <input class="form-control" name="school_contact" value="<%= s.school_contact || '' %>">
+            </div>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <label class="form-label">Enrollment Deadline</label>
+                <input class="form-control" type="date" name="enrollment_deadline" value="<%= s.enrollment_deadline || '' %>">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Primary Color (hex)</label>
+                <input class="form-control" name="primary_color" value="<%= s.primary_color || '#15803d' %>">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header">Branding &amp; Images</div>
+          <div class="card-body">
+            <div class="mb-2">
+              <label class="form-label">Logo Path</label>
+              <input class="form-control" name="logo_path" value="<%= s.logo_path || '' %>">
+              <div class="hint">Swap the file at <code>public<%= s.logo_path || '/images/logo.png' %></code>
+                or point to your own image URL.</div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Campus Background (landing page)</label>
+              <input class="form-control" name="campus_bg_path" value="<%= s.campus_bg_path || '' %>">
+              <div class="hint">Replace <code>public<%= s.campus_bg_path || '/images/campus-bg.jpg' %></code> with your campus photo.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">School Entrance Photo</label>
+              <input class="form-control" name="entrance_path" value="<%= s.entrance_path || '' %>">
+              <div class="hint">Replace <code>public<%= s.entrance_path || '/images/entrance.jpg' %></code>.</div>
+            </div>
+            <div class="d-flex gap-3">
+              <div class="text-center">
+                <img src="<%= s.logo_path %>" alt="logo" style="width:64px;height:64px;border-radius:50%;border:2px solid #dcfce7;object-fit:cover">
+                <div class="hint">logo</div>
+              </div>
+              <div class="text-center">
+                <img src="<%= s.entrance_path %>" alt="entrance" style="width:130px;height:64px;object-fit:cover;border-radius:8px">
+                <div class="hint">entrance</div>
+              </div>
+              <div class="text-center">
+                <img src="<%= s.campus_bg_path %>" alt="campus" style="width:130px;height:64px;object-fit:cover;border-radius:8px">
+                <div class="hint">campus bg</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">Landing Page Instructions (“Please Read” box)</div>
+          <div class="card-body">
+            <textarea class="form-control" name="instructions" rows="4"><%= s.instructions || '' %></textarea>
+            <div class="hint mt-1">Plain text; line breaks are preserved. Explain who clicks <strong>Enroll Here</strong>
+              vs <strong>Log In</strong> (LRN for returning students).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <a class="btn btn-outline-secondary" href="/admin">Cancel</a>
+      <button class="btn btn-success px-4 fw-bold" type="submit">💾 Save Settings</button>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/foot') %>

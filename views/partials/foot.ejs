@@ -1,0 +1,12 @@
+<footer class="footer-site no-print">
+  &copy; <%= currentYear %> <%= settings.school_name %> — <%= settings.system_title %>.
+  <%= settings.school_contact %>
+</footer>
+<script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="/js/main.js"></script>
+<% if (typeof extraScripts !== 'undefined' && extraScripts && extraScripts.length) { %>
+  <% extraScripts.forEach(function(src) { %><script src="<%= src %>"></script>
+  <% }) %>
+<% } %>
+</body>
+</html>

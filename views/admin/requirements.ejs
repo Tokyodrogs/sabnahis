@@ -1,0 +1,106 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">📄 Requirements Manager</h1>
+      <p class="page-sub">Define which documents are required per enrollment type (new, transferee, returning) and grade scope.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">+ Add Requirement</div>
+    <div class="card-body">
+      <form method="post" action="/admin/requirements/save" class="row g-2 align-items-end">
+        <div class="col-md-2">
+          <label class="form-label">Document Key *</label>
+          <input class="form-control form-control-sm" name="doc_type" required placeholder="certificate_of_enrollee">
+          <div class="hint">unique key, lowercase</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Label *</label>
+          <input class="form-control form-control-sm" name="label" required placeholder="Certificate of Enrollee">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Applies To</label>
+          <select class="form-select form-select-sm" name="applies_to">
+            <option value="all">All enrollment types</option>
+            <% TYPE_OPTIONS.filter(function(t){return t!=='all';}).forEach(function(t) { %>
+              <option value="<%= t %>"><%= t %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Grade Scope</label>
+          <select class="form-select form-select-sm" name="grade_scope">
+            <% GRADE_OPTIONS.forEach(function(g) { %><option value="<%= g %>"><%= g %></option><% }) %>
+          </select>
+        </div>
+        <div class="col-md-1">
+          <label class="form-label">Order</label>
+          <input class="form-control form-control-sm" type="number" name="sort_order" value="10">
+        </div>
+        <div class="col-md-1">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="is_required" id="rqNew" checked>
+            <label class="form-check-label" for="rqNew">Req.</label>
+          </div>
+          <button class="btn btn-success btn-sm w-100">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr><th>Order</th><th>Key</th><th style="min-width:220px">Label</th><th>Applies To</th><th>Grade Scope</th><th>Required</th><th class="text-end">Actions</th></tr>
+        </thead>
+        <tbody>
+          <% rows.forEach(function(r) { %>
+            <tr>
+              <form method="post" action="/admin/requirements/save" id="rq_<%= r.id %>" class="d-none">
+                <input type="hidden" name="id" value="<%= r.id %>">
+              </form>
+              <td><input class="form-control form-control-sm" form="rq_<%= r.id %>" type="number" name="sort_order"
+                         value="<%= r.sort_order %>" style="width:64px"></td>
+              <td><code><%= r.doc_type %></code>
+                <input type="hidden" form="rq_<%= r.id %>" name="doc_type" value="<%= r.doc_type %>"></td>
+              <td><input class="form-control form-control-sm" form="rq_<%= r.id %>" name="label" value="<%= r.label %>" required></td>
+              <td>
+                <select class="form-select form-select-sm" form="rq_<%= r.id %>" name="applies_to">
+                  <% ['all','new','transferee','returning'].forEach(function(t) { %>
+                    <option value="<%= t %>" <%= r.applies_to === t ? 'selected' : '' %>><%= t %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td>
+                <select class="form-select form-select-sm" form="rq_<%= r.id %>" name="grade_scope">
+                  <% GRADE_OPTIONS.forEach(function(g) { %>
+                    <option value="<%= g %>" <%= r.grade_scope === g ? 'selected' : '' %>><%= g %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td>
+                <div class="form-check">
+                  <input class="form-check-input" form="rq_<%= r.id %>" type="checkbox" name="is_required"
+                         <%= r.is_required ? 'checked' : '' %>>
+                </div>
+              </td>
+              <td class="text-end text-nowrap">
+                <button class="btn btn-outline-success btn-sm" form="rq_<%= r.id %>" type="submit">Save</button>
+                <form method="post" action="/admin/requirements/<%= r.id %>/delete" class="d-inline"
+                      data-confirm="Remove requirement '<%= r.label %>'?">
+                  <button class="btn btn-outline-danger btn-sm" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>
