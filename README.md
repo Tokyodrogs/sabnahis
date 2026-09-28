@@ -1,6 +1,8 @@
-# 🎓 SABNAHIS — High School Online Enrollment System
+# 🎓 Sablayan National Comprehensive High School — Online Enrollment System
 
-A complete, production-ready **Online Enrollment Module** for **SABNAHIS** with a modern
+A complete, production-ready **Online Enrollment Module** for
+**Sablayan National Comprehensive High School** (DepEd School ID **301596**,
+Sto. Niño, Sablayan, Occidental Mindoro — fb.com/sabnahisofficial2026) with a modern
 school-portal design: full-screen campus background, centered white card landing page,
 multi-step student application with draft saving, early registration for returning
 students, and a full **Admin Panel** (registrar, cashier, adviser, super admin).
@@ -113,12 +115,14 @@ Replace these files with your own school assets (or edit the paths in
 
 | Asset | Path |
 |---|---|
-| School logo | `public/images/logo.png` |
+| School logo | `public/images/logo.png` *(recreated replica of the official seal — replace with your official PNG if preferred)* |
 | Campus background (landing) | `public/images/campus-bg.jpg` |
 | School entrance photo | `public/images/entrance.jpg` |
 
-School name, tagline, colors, contact info, deadline and the *Please Read*
-instructions are all editable in **Admin → Settings** (no code changes needed).
+The seeded branding uses the real school details (name, *"Your School of Choice!"*,
+School ID 301596, Sto. Niño Sablayan address, contact 0950 039 4012). School name,
+tagline, colors, contact info, deadline and the *Please Read* instructions are all
+editable in **Admin → Settings** (no code changes needed).
 
 ---
 

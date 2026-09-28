@@ -1,5 +1,5 @@
 /**
- * SABNAHIS — Online Enrollment System
+ * Sablayan National Comprehensive High School — Online Enrollment System
  * Central configuration (env-driven with safe defaults).
  */
 const path = require('path');

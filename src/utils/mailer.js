@@ -32,8 +32,8 @@ function send({ to, subject, body, link }) {
 function verificationEmail(to, link) {
   return send({
     to,
-    subject: 'Verify your email — SABNAHIS Online Enrollment',
-    body: 'Welcome to the SABNAHIS Online Enrollment Module. Please verify your email address by opening the link below:',
+    subject: 'Verify your email — Online Enrollment Module',
+    body: 'Welcome to the Online Enrollment Module. Please verify your email address by opening the link below:',
     link,
   });
 }
@@ -41,7 +41,7 @@ function verificationEmail(to, link) {
 function resetEmail(to, link) {
   return send({
     to,
-    subject: 'Reset your password — SABNAHIS Online Enrollment',
+    subject: 'Reset your password — Online Enrollment Module',
     body: 'We received a request to reset your password. Open the link below to choose a new one (valid 1 hour):',
     link,
   });

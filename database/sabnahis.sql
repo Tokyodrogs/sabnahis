@@ -276,11 +276,11 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 -- Settings ------------------------------------------------------------------
 INSERT OR IGNORE INTO settings(key, value) VALUES
-  ('school_name',        'SABNAHIS'),
-  ('school_tagline',     'Excellence • Integrity • Service'),
+  ('school_name',        'Sablayan National Comprehensive High School'),
+  ('school_tagline',     'Your School of Choice! • School ID 301596'),
   ('system_title',       'Online Enrollment Module'),
-  ('school_address',     '123 Rizal Avenue, Imus, Calabarzon, Philippines'),
-  ('school_contact',     '(046) 555-0123  •  enroll@sabnahis.edu.ph'),
+  ('school_address',     'Sto. Niño, Sablayan, Occidental Mindoro, Philippines'),
+  ('school_contact',     '0950 039 4012  •  fb.com/sabnahisofficial2026  •  enroll@sabnahis.edu.ph'),
   ('primary_color',      '#15803d'),
   ('logo_path',          '/images/logo.png'),
   ('campus_bg_path',     '/images/campus-bg.jpg'),
