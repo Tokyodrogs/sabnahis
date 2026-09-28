@@ -1,0 +1,181 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">🗓 Enrollment Management</h1>
+      <p class="page-sub">Open/close enrollment periods, manage section capacity, and assign students.</p>
+    </div>
+  </div>
+
+  <!-- ============================== PERIODS ============================== -->
+  <div class="card mb-3">
+    <div class="card-header">Enrollment Periods</div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Label</th><th>Type</th><th>School Year</th><th>Opens</th><th>Closes</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          <% periods.forEach(function(p) { %>
+            <tr>
+              <td><strong><%= p.label %></strong></td>
+              <td><span class="badge bg-<%= p.type === 'new' ? 'success' : 'info' %>"><%= p.type === 'new' ? 'New/Transferee' : 'Early (Returning)' %></span></td>
+              <td><%= p.sy_name %></td>
+              <td><%= FMTD(p.opens_at) %></td>
+              <td><%= FMTD(p.closes_at) %></td>
+              <td>
+                <span class="status-badge bg-<%= p.is_open ? 'success' : 'secondary' %>">
+                  <%= p.is_open ? 'OPEN' : 'CLOSED' %>
+                </span>
+              </td>
+              <td class="text-end">
+                <form method="post" action="/admin/enrollment/period/<%= p.id %>/toggle" class="d-inline"
+                      data-confirm="<%= p.is_open ? 'Close this enrollment period? Students will no longer be able to submit.' : 'Open this enrollment period now?' %>">
+                  <button class="btn btn-sm <%= p.is_open ? 'btn-outline-danger' : 'btn-success' %>" type="submit">
+                    <%= p.is_open ? 'Close' : 'Open' %>
+                  </button>
+                </form>
+                <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#periodEdit<%= p.id %>">Edit</button>
+              </td>
+            </tr>
+            <tr class="collapse" id="periodEdit<%= p.id %>">
+              <td colspan="7" class="bg-light">
+                <form method="post" action="/admin/enrollment/period/save" class="row g-2 align-items-end">
+                  <input type="hidden" name="id" value="<%= p.id %>">
+                  <div class="col-md-3"><label class="form-label">Label</label>
+                    <input class="form-control form-control-sm" name="label" value="<%= p.label %>" required></div>
+                  <div class="col-md-2"><label class="form-label">Type</label>
+                    <select class="form-select form-select-sm" name="type">
+                      <option value="new" <%= p.type === 'new' ? 'selected' : '' %>>New/Transferee</option>
+                      <option value="early" <%= p.type === 'early' ? 'selected' : '' %>>Early (Returning)</option>
+                    </select></div>
+                  <div class="col-md-2"><label class="form-label">Opens</label>
+                    <input class="form-control form-control-sm" type="date" name="opens_at" value="<%= p.opens_at || '' %>"></div>
+                  <div class="col-md-2"><label class="form-label">Closes</label>
+                    <input class="form-control form-control-sm" type="date" name="closes_at" value="<%= p.closes_at || '' %>"></div>
+                  <div class="col-md-2">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="is_open" id="eo<%= p.id %>" <%= p.is_open ? 'checked' : '' %>>
+                      <label class="form-check-label" for="eo<%= p.id %>">Open</label>
+                    </div>
+                  </div>
+                  <div class="col-md-1 d-grid"><button class="btn btn-success btn-sm">Save</button></div>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (!periods.length) { %><tr><td colspan="7" class="text-center text-muted py-4">No periods configured.</td></tr><% } %>
+        </tbody>
+      </table>
+    </div>
+    <div class="card-body border-top">
+      <button class="btn btn-outline-success btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#newPeriod">
+        + Add Enrollment Period
+      </button>
+      <div class="collapse mt-2" id="newPeriod">
+        <form method="post" action="/admin/enrollment/period/save" class="row g-2 align-items-end">
+          <div class="col-md-3"><label class="form-label">Label</label>
+            <input class="form-control form-control-sm" name="label" required placeholder="e.g. Late Enrollment"></div>
+          <div class="col-md-2"><label class="form-label">Type</label>
+            <select class="form-select form-select-sm" name="type">
+              <option value="new">New/Transferee</option>
+              <option value="early">Early (Returning)</option>
+            </select></div>
+          <div class="col-md-2"><label class="form-label">School Year</label>
+            <select class="form-select form-select-sm" name="school_year_id">
+              <% schoolYears.forEach(function(sy) { %><option value="<%= sy.id %>"><%= sy.name %></option><% }) %>
+            </select></div>
+          <div class="col-md-2"><label class="form-label">Opens</label>
+            <input class="form-control form-control-sm" type="date" name="opens_at"></div>
+          <div class="col-md-2"><label class="form-label">Closes</label>
+            <input class="form-control form-control-sm" type="date" name="closes_at"></div>
+          <div class="col-md-1 d-grid"><button class="btn btn-success btn-sm">Add</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== SECTIONS ============================== -->
+  <div class="card mb-3">
+    <div class="card-header">Sections &amp; Capacity <span class="hint fw-normal">(create/edit names under Academic Setup → Sections)</span></div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr><th>Grade Level</th><th>Section</th><th>Strand</th><th style="min-width:300px">Adviser &amp; Capacity (max slots)</th><th>Occupancy</th></tr>
+        </thead>
+        <tbody>
+          <% sections.forEach(function(s) { %>
+            <tr>
+              <td><%= s.grade_name %></td>
+              <td><strong><%= s.name %></strong>
+                <% if (s.adviser_name) { %><div class="hint">Adviser: <%= s.adviser_name %></div><% } %></td>
+              <td><%= s.strand ? s.strand.code : '—' %></td>
+              <td>
+                <form method="post" action="/admin/enrollment/section/save" class="d-flex gap-1 align-items-center">
+                  <input type="hidden" name="id" value="<%= s.id %>">
+                  <select class="form-select form-select-sm" name="adviser_id" style="max-width:170px">
+                    <option value="">— adviser —</option>
+                    <% advisers.forEach(function(a) { %>
+                      <option value="<%= a.id %>" <%= s.adviser_id === a.id ? 'selected' : '' %>><%= a.full_name %></option>
+                    <% }) %>
+                  </select>
+                  <input class="form-control form-control-sm" type="number" name="capacity" min="1" max="100"
+                         value="<%= s.capacity %>" style="width:76px">
+                  <button class="btn btn-outline-success btn-sm text-nowrap" type="submit">Save</button>
+                </form>
+              </td>
+              <td>
+                <div class="progress" style="height:16px; min-width:110px">
+                  <% var pct = s.capacity ? Math.round((s.used / s.capacity) * 100) : 0; %>
+                  <div class="progress-bar <%= pct >= 100 ? 'bg-danger' : (pct >= 85 ? 'bg-warning' : 'bg-success') %>"
+                       style="width:<%= Math.min(100, pct) %>%"><%= s.used %>/<%= s.capacity %></div>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============================== ASSIGNMENT ============================== -->
+  <div class="card">
+    <div class="card-header">Assign Students to Sections
+      <span class="hint fw-normal">(approved/enrolled students without a section)</span></div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Reference</th><th>Student</th><th>Grade</th><th>Strand</th><th>Status</th><th style="min-width:260px">Assign</th></tr></thead>
+        <tbody>
+          <% if (!unassigned.length) { %>
+            <tr><td colspan="6" class="text-center text-muted py-4">All approved students have sections. ✅</td></tr>
+          <% } %>
+          <% unassigned.forEach(function(u) { %>
+            <tr>
+              <td><strong><%= u.reference_no %></strong></td>
+              <td><%= u.last_name %>, <%= u.first_name %>
+                <% if (u.lrn) { %><div class="hint">LRN <%= u.lrn %></div><% } %></td>
+              <td><%= u.grade_name %></td>
+              <td><%= u.strand_code || '—' %></td>
+              <td><span class="status-badge bg-<%= STATUS_COLORS[u.status] %>"><%= STATUS_LABELS[u.status] %></span></td>
+              <td>
+                <form method="post" action="/admin/enrollment/assign" class="d-flex gap-1">
+                  <input type="hidden" name="enrollment_id" value="<%= u.id %>">
+                  <select class="form-select form-select-sm" name="section_id" required>
+                    <option value="">— choose section —</option>
+                    <% sections.filter(function(s){ return s.grade_level_id === u.grade_level_id; }).forEach(function(s) { %>
+                      <option value="<%= s.id %>"><%= s.name %><%= s.strand ? ' (' + s.strand.code + ')' : '' %>
+                        — <%= s.remaining %> free</option>
+                    <% }) %>
+                  </select>
+                  <button class="btn btn-success btn-sm text-nowrap">Assign</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

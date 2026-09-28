@@ -1,0 +1,86 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">💰 Payments / Finance</h1>
+      <p class="page-sub">Verify deposit slips and online payment references. Verified payments complete the enrollment.</p>
+    </div>
+    <a class="btn btn-outline-success btn-sm" href="/admin/reports?type=collection">📈 Collection Report →</a>
+  </div>
+
+  <div class="filter-pills mb-3">
+    <a href="/admin/payments?status=pending" class="<%= status === 'pending' ? 'active' : '' %>">Pending</a>
+    <a href="/admin/payments?status=verified" class="<%= status === 'verified' ? 'active' : '' %>">Verified</a>
+    <a href="/admin/payments?status=rejected" class="<%= status === 'rejected' ? 'active' : '' %>">Rejected</a>
+    <a href="/admin/payments?status=" class="<%= !status ? 'active' : '' %>">All</a>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Date</th><th>Student</th><th>Enrollment Ref</th><th>Grade</th>
+            <th>Amount</th><th>Method</th><th>Proof</th><th>Status</th><th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!rows.length) { %>
+            <tr><td colspan="9" class="text-center text-muted py-5">No <%= status || 'matching' %> payments. 🎉</td></tr>
+          <% } %>
+          <% rows.forEach(function(p) { %>
+            <tr>
+              <td class="hint"><%= FMTDT(p.created_at) %></td>
+              <td>
+                <strong><%= p.last_name %>, <%= p.first_name %></strong>
+                <% if (p.lrn) { %><div class="hint">LRN <%= p.lrn %></div><% } %>
+              </td>
+              <td>
+                <a href="/admin/applicants/<%= p.enrollment_id %>" class="fw-bold"><%= p.reference_no %></a>
+                <div class="hint"><%= STATUS_LABELS[p.enrollment_status] || p.enrollment_status %></div>
+              </td>
+              <td><%= p.grade_name %></td>
+              <td class="fw-bold"><%= PAY(p.amount) %></td>
+              <td>
+                <span class="badge bg-light text-dark border"><%= p.method === 'deposit_slip' ? 'Deposit Slip' : 'Online Ref' %></span>
+                <% if (p.reference_no) { %><div class="hint user-select-all"><%= p.reference_no %></div><% } %>
+              </td>
+              <td>
+                <% if (p.slip_stored_name) { %>
+                  <a class="btn btn-outline-primary btn-sm" href="/files/payment/<%= p.id %>" target="_blank">View</a>
+                <% } else { %><span class="hint">no file</span><% } %>
+              </td>
+              <td>
+                <span class="status-badge bg-<%= p.status === 'verified' ? 'success' : (p.status === 'rejected' ? 'danger' : 'warning text-dark') %>"><%= p.status %></span>
+                <% if (p.verifier_name) { %><div class="hint">by <%= p.verifier_name %></div><% } %>
+              </td>
+              <td class="text-end">
+                <% if (p.status === 'pending' && (user.role === 'cashier' || user.role === 'super_admin')) { %>
+                  <form method="post" action="/admin/payments/<%= p.id %>/verify" class="d-inline"
+                        data-confirm="Verify this payment? If the application is approved, the student will be enrolled.">
+                    <input type="hidden" name="return_status" value="<%= status %>">
+                    <button class="btn btn-success btn-sm" name="action" value="verify" type="submit">✔ Verify</button>
+                  </form>
+                  <button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="collapse"
+                          data-bs-target="#reject<%= p.id %>">✖</button>
+                  <div class="collapse mt-1" id="reject<%= p.id %>">
+                    <form method="post" action="/admin/payments/<%= p.id %>/verify">
+                      <input type="hidden" name="return_status" value="<%= status %>">
+                      <input class="form-control form-control-sm mb-1" name="remarks" placeholder="Reason" required>
+                      <button class="btn btn-danger btn-sm w-100" name="action" value="reject" type="submit">Reject Payment</button>
+                    </form>
+                  </div>
+                <% } else { %>
+                  <span class="hint">—</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

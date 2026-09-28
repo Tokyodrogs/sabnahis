@@ -1,0 +1,28 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card card-body text-center py-5">
+        <div style="font-size:3.5rem">🗓️</div>
+        <h1 class="page-title mt-2">
+          <%= (typeof mode !== 'undefined' && mode === 'early') ? 'Early Registration Is Closed' : 'Enrollment Is Currently Closed' %>
+        </h1>
+        <p class="page-sub">
+          <% if (period) { %>
+            The enrollment period
+            <strong><%= period.label %></strong>
+            is scheduled from <strong><%= period.opens_at || '—' %></strong> to <strong><%= period.closes_at || '—' %></strong>
+            and is currently <span class="badge bg-secondary">closed</span>.
+          <% } else { %>
+            No enrollment period has been configured yet. Please check back soon or contact the registrar.
+          <% } %>
+        </p>
+        <p class="page-sub">For questions, contact the registrar: <strong><%= settings && settings.school_contact ? settings.school_contact : 'school registrar office' %></strong></p>
+        <a class="btn btn-success mt-3" style="max-width:260px; margin:0 auto" href="/dashboard">← My Dashboard</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

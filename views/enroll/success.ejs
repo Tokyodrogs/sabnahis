@@ -1,0 +1,38 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card card-body text-center py-5">
+        <div style="font-size:4rem">🎓</div>
+        <h1 class="page-title mt-2">Application Submitted!</h1>
+        <p class="page-sub">Thank you. Your application is now with the registrar for review.</p>
+
+        <div class="assigned-section my-3 mx-auto" style="max-width:420px">
+          <div class="hint text-uppercase fw-bold">Enrollment Reference Number</div>
+          <div style="font-size:1.6rem; font-weight:800; color:var(--brand-dark)" class="user-select-all">
+            <%= ref %>
+          </div>
+          <div class="hint">Save or screenshot this reference number.</div>
+        </div>
+
+        <div class="alert alert-secondary text-start" style="font-size:.85rem; max-width:460px; margin:0 auto">
+          <strong>What happens next?</strong>
+          <ol class="mb-0 ps-3">
+            <li>Registrar reviews your application (Submitted → Under Review).</li>
+            <li>You'll be notified if anything needs correction.</li>
+            <li>Once approved — view your assessment and upload payment proof.</li>
+            <li>After payment verification you'll be <strong>Enrolled</strong> — confirm your schedule and print your COR.</li>
+          </ol>
+        </div>
+
+        <div class="d-grid gap-2 mt-4" style="max-width:320px; margin:0 auto">
+          <a class="btn btn-success" href="/dashboard">Go to My Dashboard →</a>
+          <button class="btn btn-outline-secondary" onclick="window.print()">🖨 Print This Page</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

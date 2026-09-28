@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= settings.school_name %> — Online Enrollment System</title>
+  <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="<%= settings.logo_path %>">
+</head>
+<body class="landing-body">
+
+<% if (typeof flashes !== 'undefined' && flashes.length) { %>
+<div class="container position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index:1080; max-width:460px;">
+  <% flashes.forEach(function(f) { %>
+    <div class="alert alert-<%= f.type %> alert-dismissible fade show py-2" role="alert">
+      <%= f.message %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% }) %>
+</div>
+<% } %>
+
+<div class="landing-wrap">
+  <div class="portal-card">
+    <img class="portal-logo" src="<%= settings.logo_path %>" alt="<%= settings.school_name %> logo">
+    <h1 class="portal-school"><%= settings.school_name %></h1>
+    <p class="portal-tagline"><%= settings.school_tagline %></p>
+    <p class="portal-sys-title"><%= settings.system_title %></p>
+
+    <div class="instruct-box">
+      <span class="t">📢 Please Read</span>
+      <%- (settings.instructions || '').replace(/\n/g, '<br>') %>
+    </div>
+
+    <% if (typeof loginRequired !== 'undefined' && loginRequired) { %>
+      <div class="alert alert-warning py-2" style="font-size:.8rem">Please log in to continue.</div>
+    <% } %>
+
+    <form method="post" action="/login" autocomplete="on">
+      <div class="mb-2">
+        <label for="login">Username / LRN</label>
+        <input class="form-control" id="login" name="login" required
+               placeholder="e.g. admin or 123456789012" autocomplete="username">
+      </div>
+      <div class="mb-1">
+        <label for="password">Password</label>
+        <input class="form-control" id="password" name="password" type="password" required
+               placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="text-end mb-3">
+        <a class="forgot-link" href="/forgot-password">Forgot your password? <strong>Click Here</strong></a>
+      </div>
+
+      <div class="d-grid gap-2">
+        <a class="btn btn-enroll btn-lg" href="/register">
+          🟢 Enroll Here <span class="fw-normal">(New &amp; Transferee)</span>
+        </a>
+        <button class="btn btn-login btn-lg" type="submit">
+          🔵 Log In <span class="fw-normal">(existing account / LRN)</span>
+        </button>
+      </div>
+    </form>
+
+    <div class="portal-foot">
+      New student or transferee without an account?
+      <a href="/register"><strong>Create one here →</strong></a>
+    </div>
+  </div>
+
+  <div class="portal-foot text-white-50 mt-3">
+    Enrollment deadline: <strong><%= settings.enrollment_deadline || 'TBA' %></strong>
+    · <%= settings.school_contact %>
+  </div>
+</div>
+
+<script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+</body>
+</html>

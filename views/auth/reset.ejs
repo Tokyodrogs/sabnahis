@@ -1,0 +1,31 @@
+<%- include('../partials/head', { title: 'Reset Password' }) %>
+
+<div class="auth-body" style="min-height:70vh">
+  <div class="auth-card">
+    <img class="auth-logo" src="<%= settings.logo_path %>" alt="logo">
+    <h1>Choose a New Password</h1>
+    <p class="sub">Your new password must be at least 8 characters.</p>
+
+    <% if (error) { %>
+      <div class="alert alert-danger py-2" style="font-size:.85rem"><%= error %></div>
+    <% } %>
+
+    <form method="post" action="/reset-password">
+      <input type="hidden" name="token" value="<%= token %>">
+      <div class="mb-2">
+        <label class="form-label" for="password">New Password</label>
+        <input class="form-control" id="password" name="password" type="password" minlength="8" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="confirm_password">Confirm New Password</label>
+        <input class="form-control" id="confirm_password" name="confirm_password" type="password" minlength="8" required>
+      </div>
+      <div class="d-grid">
+        <button class="btn btn-success fw-bold" type="submit">Update Password</button>
+      </div>
+    </form>
+    <div class="portal-foot mt-3"><a href="/">← Back to Log In</a></div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

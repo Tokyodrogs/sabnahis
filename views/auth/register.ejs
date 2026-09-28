@@ -1,0 +1,72 @@
+<%- include('../partials/head', { title: 'Create an Account' }) %>
+
+<div class="auth-body" style="min-height:70vh">
+  <div class="auth-card wide">
+    <img class="auth-logo" src="<%= settings.logo_path %>" alt="logo">
+    <h1><%= sent ? 'Account Created 🎉' : 'Create Your Enrollment Account' %></h1>
+    <p class="sub">
+      <%= sent ? 'Almost done — verify your email to continue.' :
+         'For NEW (Grade 7 / 11) and TRANSFEREE students' %>
+    </p>
+
+    <% if (sent) { %>
+      <div class="alert alert-success py-2" style="font-size:.85rem">
+        <strong>Welcome, <%= sent.email %>!</strong><br>
+        Your username is <code class="user-select-all"><%= sent.loginId %></code> — use it (or your email) to log in.
+      </div>
+      <div class="alert alert-info py-2" style="font-size:.8rem">
+        📧 A verification email was sent (demo mode: also written to <code>data/mail.log</code>).<br>
+        <strong>Verify now:</strong>
+        <a href="<%= sent.verifyUrl %>" class="fw-bold">Click here to verify your email →</a>
+      </div>
+      <div class="d-grid gap-2">
+        <a class="btn btn-success" href="/dashboard">Continue to My Dashboard</a>
+        <a class="btn btn-outline-secondary" href="/">Back to Home</a>
+      </div>
+    <% } else { %>
+      <form method="post" action="/register">
+        <div class="mb-2">
+          <label class="form-label" for="full_name">Student Full Name</label>
+          <input class="form-control" id="full_name" name="full_name" required
+                 value="<%= form.full_name || '' %>" placeholder="Juan Miguel Dela Cruz">
+        </div>
+        <div class="mb-2">
+          <label class="form-label" for="email">Email Address</label>
+          <input class="form-control" id="email" name="email" type="email" required
+                 value="<%= form.email || '' %>" placeholder="you@example.com">
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col-sm-6">
+            <label class="form-label" for="password">Password</label>
+            <input class="form-control" id="password" name="password" type="password" minlength="8" required
+                   placeholder="min. 8 characters">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="confirm_password">Confirm Password</label>
+            <input class="form-control" id="confirm_password" name="confirm_password" type="password" minlength="8" required>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Enrollment Type</label>
+          <div class="btn-group w-100" role="group" aria-label="Enrollment type">
+            <input type="radio" class="btn-check" name="enrollment_type" id="et-new" value="new"
+                   <%= (form.enrollment_type || 'new') === 'new' ? 'checked' : '' %>>
+            <label class="btn btn-outline-success" for="et-new">NEW Student</label>
+            <input type="radio" class="btn-check" name="enrollment_type" id="et-tr" value="transferee"
+                   <%= form.enrollment_type === 'transferee' ? 'checked' : '' %>>
+            <label class="btn btn-outline-success" for="et-tr">TRANSFEREE</label>
+          </div>
+        </div>
+        <div class="d-grid">
+          <button class="btn btn-success btn-lg fw-bold" type="submit">Create Account</button>
+        </div>
+      </form>
+      <div class="portal-foot mt-3">
+        Already have an account? <a href="/"><strong>Log In</strong></a>
+        · Returning student? Use your <strong>LRN</strong> to log in.
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

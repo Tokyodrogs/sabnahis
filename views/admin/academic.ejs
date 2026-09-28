@@ -1,0 +1,430 @@
+<%- include('../partials/head') %>
+<%
+  var tabs = [
+    ['grade_levels','Grade Levels'],
+    ['sections','Sections'],
+    ['strands','Strands / Tracks'],
+    ['subjects','Subjects'],
+    ['school_years','School Years'],
+    ['grading_periods','Grading Periods'],
+    ['fees','Fee Structure'],
+  ];
+%>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">🛠 Academic Setup</h1>
+      <p class="page-sub">Configure grade levels, sections, strands, subjects, school years, grading periods and fees.</p>
+    </div>
+  </div>
+
+  <ul class="nav nav-pills tab-nav mb-3 flex-wrap gap-1">
+    <% tabs.forEach(function(t) { %>
+      <li class="nav-item">
+        <a class="nav-link <%= tab === t[0] ? 'active' : '' %>" href="/admin/academic?tab=<%= t[0] %>"><%= t[1] %></a>
+      </li>
+    <% }) %>
+  </ul>
+
+  <!-- ============================= GRADE LEVELS ============================= -->
+  <% if (tab === 'grade_levels') { %>
+  <div class="card mb-3">
+    <div class="card-header">+ Add Grade Level</div>
+    <div class="card-body">
+      <form method="post" action="/admin/academic/grade_levels/save" class="row g-2 align-items-end">
+        <div class="col-md-2"><label class="form-label">Code</label>
+          <input class="form-control form-control-sm" name="code" required placeholder="G7"></div>
+        <div class="col-md-3"><label class="form-label">Name</label>
+          <input class="form-control form-control-sm" name="name" required placeholder="Grade 7"></div>
+        <div class="col-md-3"><label class="form-label">Department</label>
+          <select class="form-select form-select-sm" name="department">
+            <option value="jhs">Junior High (7–10)</option>
+            <option value="shs">Senior High (11–12)</option>
+          </select></div>
+        <div class="col-md-2"><label class="form-label">Order</label>
+          <input class="form-control form-control-sm" type="number" name="order_no" value="7"></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-success btn-sm">Add</button></div>
+      </form>
+    </div>
+  </div>
+  <% data.grade_levels.forEach(function(r) { %>
+    <form method="post" action="/admin/academic/grade_levels/save" id="gl_<%= r.id %>" class="d-none">
+      <input type="hidden" name="id" value="<%= r.id %>">
+    </form>
+  <% }) %>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Code</th><th>Name</th><th>Department</th><th>Order</th><th class="text-end"></th></tr></thead>
+        <tbody>
+          <% data.grade_levels.forEach(function(r) { %>
+            <tr>
+              <td><input class="form-control form-control-sm" form="gl_<%= r.id %>" name="code" value="<%= r.code %>" required></td>
+              <td><input class="form-control form-control-sm" form="gl_<%= r.id %>" name="name" value="<%= r.name %>" required></td>
+              <td>
+                <select class="form-select form-select-sm" form="gl_<%= r.id %>" name="department">
+                  <option value="jhs" <%= r.department === 'jhs' ? 'selected' : '' %>>JHS</option>
+                  <option value="shs" <%= r.department === 'shs' ? 'selected' : '' %>>SHS</option>
+                </select>
+              </td>
+              <td><input class="form-control form-control-sm" form="gl_<%= r.id %>" type="number" name="order_no" value="<%= r.order_no %>" style="width:70px"></td>
+              <td class="text-end text-nowrap">
+                <button class="btn btn-outline-success btn-sm" form="gl_<%= r.id %>" type="submit">Save</button>
+                <form method="post" action="/admin/academic/grade_levels/<%= r.id %>/delete" class="d-inline"
+                      data-confirm="Delete <%= r.name %>? This also removes its sections/subjects (enrolled students must be moved first).">
+                  <button class="btn btn-outline-danger btn-sm" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================================ SECTIONS ============================== -->
+  <% } else if (tab === 'sections') { %>
+  <div class="card mb-3">
+    <div class="card-header">+ Add Section</div>
+    <div class="card-body">
+      <form method="post" action="/admin/academic/sections/save" class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label">Grade Level *</label>
+          <select class="form-select form-select-sm" name="grade_level_id" required>
+            <% gradeLevels.forEach(function(g) { %><option value="<%= g.id %>"><%= g.name %></option><% }) %>
+          </select></div>
+        <div class="col-md-2"><label class="form-label">Section Name *</label>
+          <input class="form-control form-control-sm" name="name" required placeholder="e.g. Rizal"></div>
+        <div class="col-md-2"><label class="form-label">Strand (SHS)</label>
+          <select class="form-select form-select-sm" name="strand_id">
+            <option value="">— none —</option>
+            <% strands.forEach(function(s) { %><option value="<%= s.id %>"><%= s.code %></option><% }) %>
+          </select></div>
+        <div class="col-md-2"><label class="form-label">Capacity</label>
+          <input class="form-control form-control-sm" type="number" name="capacity" value="45" min="1"></div>
+        <div class="col-md-2"><label class="form-label">Adviser</label>
+          <select class="form-select form-select-sm" name="adviser_id">
+            <option value="">— none —</option>
+            <% advisers.forEach(function(a) { %><option value="<%= a.id %>"><%= a.full_name %></option><% }) %>
+          </select></div>
+        <div class="col-md-1 d-grid"><button class="btn btn-success btn-sm">Add</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Grade</th><th>Section</th><th>Strand</th><th>Adviser</th><th>Capacity</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          <% data.sections.forEach(function(r) { %>
+            <tr>
+              <td><%= r.grade_name %></td>
+              <td><strong><%= r.name %></strong></td>
+              <td><%= r.strand_code || '—' %></td>
+              <td><%= r.adviser_name || '—' %></td>
+              <td><%= r.capacity %></td>
+              <td class="text-end">
+                <form method="post" action="/admin/academic/sections/<%= r.id %>/delete" class="d-inline"
+                      data-confirm="Delete section '<%= r.name %>'?">
+                  <button class="btn btn-outline-danger btn-sm">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================================= STRANDS ============================== -->
+  <% } else if (tab === 'strands') { %>
+  <div class="card mb-3">
+    <div class="card-header">+ Add Strand / Track</div>
+    <div class="card-body">
+      <form method="post" action="/admin/academic/strands/save" class="row g-2 align-items-end">
+        <div class="col-md-2"><label class="form-label">Code *</label>
+          <input class="form-control form-control-sm" name="code" required placeholder="STEM"></div>
+        <div class="col-md-6"><label class="form-label">Full Name *</label>
+          <input class="form-control form-control-sm" name="name" required placeholder="Science, Technology, Engineering & Mathematics"></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-success btn-sm">Add</button></div>
+      </form>
+    </div>
+  </div>
+  <% data.strands.forEach(function(r) { %>
+    <form method="post" action="/admin/academic/strands/save" id="st_<%= r.id %>" class="d-none">
+      <input type="hidden" name="id" value="<%= r.id %>">
+    </form>
+  <% }) %>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Code</th><th>Name</th><th class="text-end"></th></tr></thead>
+        <tbody>
+          <% data.strands.forEach(function(r) { %>
+            <tr>
+              <td style="width:160px"><input class="form-control form-control-sm" form="st_<%= r.id %>" name="code" value="<%= r.code %>" required></td>
+              <td><input class="form-control form-control-sm" form="st_<%= r.id %>" name="name" value="<%= r.name %>" required></td>
+              <td class="text-end text-nowrap">
+                <button class="btn btn-outline-success btn-sm" form="st_<%= r.id %>" type="submit">Save</button>
+                <form method="post" action="/admin/academic/strands/<%= r.id %>/delete" class="d-inline"
+                      data-confirm="Delete strand <%= r.code %>?">
+                  <button class="btn btn-outline-danger btn-sm" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================================= SUBJECTS ============================= -->
+  <% } else if (tab === 'subjects') { %>
+  <div class="card mb-3">
+    <div class="card-header">+ Add Subject</div>
+    <div class="card-body">
+      <form method="post" action="/admin/academic/subjects/save" class="row g-2 align-items-end">
+        <div class="col-md-2"><label class="form-label">Code</label>
+          <input class="form-control form-control-sm" name="code" placeholder="MA7"></div>
+        <div class="col-md-3"><label class="form-label">Subject Name *</label>
+          <input class="form-control form-control-sm" name="name" required placeholder="Mathematics 7"></div>
+        <div class="col-md-2"><label class="form-label">Grade Level *</label>
+          <select class="form-select form-select-sm" name="grade_level_id" required>
+            <% gradeLevels.forEach(function(g) { %><option value="<%= g.id %>"><%= g.name %></option><% }) %>
+          </select></div>
+        <div class="col-md-2"><label class="form-label">Strand (optional)</label>
+          <select class="form-select form-select-sm" name="strand_id">
+            <option value="">— all strands —</option>
+            <% strands.forEach(function(s) { %><option value="<%= s.id %>"><%= s.code %></option><% }) %>
+          </select></div>
+        <div class="col-md-1"><label class="form-label">Units</label>
+          <input class="form-control form-control-sm" type="number" name="units" value="1" min="1"></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-success btn-sm">Add</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Code</th><th>Subject</th><th>Grade</th><th>Strand</th><th>Units</th><th class="text-end"></th></tr></thead>
+        <tbody>
+          <% data.subjects.forEach(function(r) { %>
+            <tr>
+              <td><%= r.code || '—' %></td>
+              <td><strong><%= r.name %></strong></td>
+              <td><%= r.grade_name %></td>
+              <td><%= r.strand_code || 'All' %></td>
+              <td><%= r.units %></td>
+              <td class="text-end">
+                <form method="post" action="/admin/academic/subjects/<%= r.id %>/delete" class="d-inline"
+                      data-confirm="Delete subject '<%= r.name %>'?">
+                  <button class="btn btn-outline-danger btn-sm">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============================== SCHOOL YEARS ============================ -->
+  <% } else if (tab === 'school_years') { %>
+  <div class="card mb-3">
+    <div class="card-header">+ Add School Year</div>
+    <div class="card-body">
+      <form method="post" action="/admin/academic/school_years/save" class="row g-2 align-items-end">
+        <div class="col-md-2"><label class="form-label">Name *</label>
+          <input class="form-control form-control-sm" name="name" required placeholder="2027-2028"></div>
+        <div class="col-md-2"><label class="form-label">Start</label>
+          <input class="form-control form-control-sm" type="date" name="start_date"></div>
+        <div class="col-md-2"><label class="form-label">End</label>
+          <input class="form-control form-control-sm" type="date" name="end_date"></div>
+        <div class="col-md-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="is_current" id="syCur">
+            <label class="form-check-label" for="syCur">Current school year</label>
+          </div>
+        </div>
+        <div class="col-md-2 d-grid"><button class="btn btn-success btn-sm">Add</button></div>
+      </form>
+    </div>
+  </div>
+  <% data.school_years.forEach(function(r) { %>
+    <form method="post" action="/admin/academic/school_years/save" id="sy_<%= r.id %>" class="d-none">
+      <input type="hidden" name="id" value="<%= r.id %>">
+    </form>
+  <% }) %>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Name</th><th>Start</th><th>End</th><th>Current?</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          <% data.school_years.forEach(function(r) { %>
+            <tr class="<%= r.is_current ? 'table-success' : '' %>">
+              <td><input class="form-control form-control-sm" form="sy_<%= r.id %>" name="name" value="<%= r.name %>" required style="width:120px"></td>
+              <td><input class="form-control form-control-sm" form="sy_<%= r.id %>" type="date" name="start_date" value="<%= r.start_date || '' %>" style="width:150px"></td>
+              <td><input class="form-control form-control-sm" form="sy_<%= r.id %>" type="date" name="end_date" value="<%= r.end_date || '' %>" style="width:150px"></td>
+              <td>
+                <div class="form-check">
+                  <input class="form-check-input" form="sy_<%= r.id %>" type="checkbox" name="is_current" <%= r.is_current ? 'checked' : '' %>>
+                </div>
+              </td>
+              <td class="text-end text-nowrap">
+                <button class="btn btn-outline-success btn-sm" form="sy_<%= r.id %>" type="submit">Save</button>
+                <form method="post" action="/admin/academic/school_years/<%= r.id %>/delete" class="d-inline"
+                      data-confirm="Delete school year <%= r.name %>?">
+                  <button class="btn btn-outline-danger btn-sm" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============================== GRADING PERIODS ========================= -->
+  <% } else if (tab === 'grading_periods') { %>
+  <div class="card mb-3">
+    <div class="card-header">+ Add Grading Period</div>
+    <div class="card-body">
+      <form method="post" action="/admin/academic/grading_periods/save" class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label">School Year *</label>
+          <select class="form-select form-select-sm" name="school_year_id" required>
+            <% schoolYears.forEach(function(sy) { %><option value="<%= sy.id %>"><%= sy.name %></option><% }) %>
+          </select></div>
+        <div class="col-md-3"><label class="form-label">Name *</label>
+          <input class="form-control form-control-sm" name="name" required placeholder="Quarter 1"></div>
+        <div class="col-md-2"><label class="form-label">Order</label>
+          <input class="form-control form-control-sm" type="number" name="order_no" value="1"></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-success btn-sm">Add</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>School Year</th><th>Name</th><th>Order</th><th class="text-end"></th></tr></thead>
+        <tbody>
+          <% data.grading_periods.forEach(function(r) { %>
+            <tr>
+              <td><%= r.sy_name %></td>
+              <td><strong><%= r.name %></strong></td>
+              <td><%= r.order_no %></td>
+              <td class="text-end">
+                <form method="post" action="/admin/academic/grading_periods/<%= r.id %>/delete" class="d-inline"
+                      data-confirm="Delete <%= r.name %>?">
+                  <button class="btn btn-outline-danger btn-sm">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================================== FEES =============================== -->
+  <% } else if (tab === 'fees') { %>
+  <div class="card mb-3">
+    <div class="card-header">+ Add Fee</div>
+    <div class="card-body">
+      <form method="post" action="/admin/academic/fees/save" class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label">Fee Name *</label>
+          <input class="form-control form-control-sm" name="name" required placeholder="Laboratory Fee"></div>
+        <div class="col-md-2"><label class="form-label">Category</label>
+          <select class="form-select form-select-sm" name="category">
+            <% ['tuition','miscellaneous','laboratory','uniform','books','other'].forEach(function(c) { %>
+              <option value="<%= c %>" class="text-capitalize"><%= c.charAt(0).toUpperCase()+c.slice(1) %></option>
+            <% }) %>
+          </select></div>
+        <div class="col-md-2"><label class="form-label">Amount (₱) *</label>
+          <input class="form-control form-control-sm" type="number" step="0.01" min="0" name="amount" required></div>
+        <div class="col-md-2"><label class="form-label">Grade Level</label>
+          <select class="form-select form-select-sm" name="grade_level_id">
+            <option value="">All grades</option>
+            <% gradeLevels.forEach(function(g) { %><option value="<%= g.id %>"><%= g.name %></option><% }) %>
+          </select></div>
+        <div class="col-md-1"><label class="form-label">Strand</label>
+          <select class="form-select form-select-sm" name="strand_id">
+            <option value="">—</option>
+            <% strands.forEach(function(s) { %><option value="<%= s.id %>"><%= s.code %></option><% }) %>
+          </select></div>
+        <div class="col-md-1"><label class="form-label">S.Y.</label>
+          <select class="form-select form-select-sm" name="school_year_id">
+            <option value="">All</option>
+            <% schoolYears.forEach(function(sy) { %><option value="<%= sy.id %>"><%= sy.name %></option><% }) %>
+          </select></div>
+        <div class="col-md-1 d-grid"><button class="btn btn-success btn-sm">Add</button></div>
+      </form>
+    </div>
+  </div>
+  <% data.fees.forEach(function(r) { %>
+    <form method="post" action="/admin/academic/fees/save" id="fe_<%= r.id %>" class="d-none">
+      <input type="hidden" name="id" value="<%= r.id %>">
+    </form>
+  <% }) %>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Fee</th><th>Category</th><th>Grade</th><th>Strand</th><th>S.Y.</th><th>Amount</th><th>Active</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          <% data.fees.forEach(function(r) { %>
+            <tr>
+              <td><input class="form-control form-control-sm" form="fe_<%= r.id %>" name="name" value="<%= r.name %>" required></td>
+              <td>
+                <select class="form-select form-select-sm" form="fe_<%= r.id %>" name="category">
+                  <% ['tuition','miscellaneous','laboratory','uniform','books','other'].forEach(function(c) { %>
+                    <option value="<%= c %>" <%= r.category === c ? 'selected' : '' %>><%= c %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td>
+                <select class="form-select form-select-sm" form="fe_<%= r.id %>" name="grade_level_id">
+                  <option value="">All</option>
+                  <% gradeLevels.forEach(function(g) { %>
+                    <option value="<%= g.id %>" <%= r.grade_level_id === g.id ? 'selected' : '' %>><%= g.name %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td>
+                <select class="form-select form-select-sm" form="fe_<%= r.id %>" name="strand_id">
+                  <option value="">—</option>
+                  <% strands.forEach(function(s) { %>
+                    <option value="<%= s.id %>" <%= r.strand_id === s.id ? 'selected' : '' %>><%= s.code %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td>
+                <select class="form-select form-select-sm" form="fe_<%= r.id %>" name="school_year_id">
+                  <option value="">All</option>
+                  <% schoolYears.forEach(function(sy) { %>
+                    <option value="<%= sy.id %>" <%= r.school_year_id === sy.id ? 'selected' : '' %>><%= sy.name %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td><input class="form-control form-control-sm" form="fe_<%= r.id %>" type="number" step="0.01" min="0" name="amount"
+                         value="<%= r.amount %>" style="width:110px" required></td>
+              <td>
+                <div class="form-check">
+                  <input class="form-check-input" form="fe_<%= r.id %>" type="checkbox" name="is_active" <%= r.is_active ? 'checked' : '' %>>
+                </div>
+              </td>
+              <td class="text-end text-nowrap">
+                <button class="btn btn-outline-success btn-sm" form="fe_<%= r.id %>" type="submit">Save</button>
+                <form method="post" action="/admin/academic/fees/<%= r.id %>/delete" class="d-inline"
+                      data-confirm="Delete fee '<%= r.name %>'?">
+                  <button class="btn btn-outline-danger btn-sm" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<%- include('../partials/foot') %>

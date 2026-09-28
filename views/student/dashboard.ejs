@@ -1,0 +1,263 @@
+<%- include('../partials/head') %>
+<%
+  var h2 = h;
+  var tl = timeline; // {history, reached}
+  var statuses = ['submitted','under_review','approved','enrolled'];
+  var currentIdx = -1;
+  if (active) {
+    if (active.status === 'submitted') currentIdx = 0;
+    else if (active.status === 'under_review') currentIdx = 1;
+    else if (active.status === 'approved') currentIdx = 2;
+    else if (active.status === 'enrolled') currentIdx = 3;
+    else if (active.status === 'returned') currentIdx = 0;
+  }
+%>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">👋 Welcome, <%= student.first_name %>!</h1>
+      <p class="page-sub">
+        <%= h2.fullName(student) %>
+        <% if (student.lrn) { %> · LRN <strong><%= student.lrn %></strong><% } %>
+        · School Year <strong><%= sy ? sy.name : '—' %></strong>
+      </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-success btn-sm" href="/documents">📁 My Documents</a>
+      <form method="post" action="/logout"><button class="btn btn-outline-secondary btn-sm">Log Out</button></form>
+    </div>
+  </div>
+
+  <% if (!user.email_verified) { %>
+    <div class="alert alert-warning">
+      ⚠ Your email address is <strong>not verified yet</strong> — you won't be able to submit an application until you verify.
+      Check your inbox (demo: see the link shown after registration, or <code>data/mail.log</code>).
+    </div>
+  <% } %>
+
+  <div class="row g-3">
+    <!-- ============================ LEFT: STATUS TRACKER ============================ -->
+    <div class="col-lg-7">
+      <% if (active) { %>
+        <div class="card mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Enrollment Status — <%= active.type === 'early' ? 'Early Registration' : 'Application' %></span>
+            <span class="status-badge bg-<%= h2.STATUS_COLORS[active.status] %>"><%= h2.STATUS_LABELS[active.status] %></span>
+          </div>
+          <div class="card-body">
+            <div class="row small mb-3">
+              <div class="col-6"><strong>Reference No:</strong><br><span class="user-select-all"><%= active.reference_no || '—' %></span></div>
+              <div class="col-6"><strong>Grade Level:</strong><br><%= active.grade_name %>
+                <% if (active.strand_code) { %> · <%= active.strand_code %><% } %>
+                <% if (active.section_name) { %> · Section: <strong><%= active.section_name %></strong><% } %></div>
+            </div>
+
+            <% if (active.status === 'returned') { %>
+              <div class="alert alert-danger py-2">
+                <strong>Returned for correction:</strong> <%= active.remarks || '' %><br>
+                <a href="/enroll?step=1" class="fw-bold">Fix &amp; resubmit your application →</a>
+              </div>
+            <% } %>
+            <% if (active.status === 'rejected') { %>
+              <div class="alert alert-dark py-2"><strong>Rejected:</strong> <%= active.remarks || 'Please contact the registrar.' %></div>
+            <% } %>
+
+            <ul class="timeline">
+              <% statuses.forEach(function(st, i) { %>
+                <% var entry = tl && tl.reached ? tl.reached[st] : null; %>
+                <% var done = !!entry && active.status !== 'returned' && active.status !== 'rejected'; %>
+                <% var isCurrent = (i === currentIdx && active.status !== 'enrolled'); %>
+                <li class="<%= done ? 'done' : '' %> <%= isCurrent ? 'current' : '' %>">
+                  <div class="tl-title"><%= h2.TIMELINE_LABELS[st] %></div>
+                  <div class="tl-meta">
+                    <% if (entry) { %>
+                      <%= h2.fmtDateTime(entry.created_at) %>
+                      <% if (entry.changed_by_name) { %> · by <%= entry.changed_by_name %><% } %>
+                    <% } else { %>
+                      pending
+                    <% } %>
+                  </div>
+                  <% if (entry && entry.remarks && (st === 'returned' || st === 'rejected')) { %>
+                    <div class="tl-remarks"><%= entry.remarks %></div>
+                  <% } %>
+                </li>
+              <% }) %>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card mb-3">
+          <div class="card-header">Next Steps &amp; Actions</div>
+          <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+              <a class="btn btn-outline-success btn-sm" href="/print/summary?type=<%= active.type %>">📄 Print Enrollment Summary</a>
+
+              <% if (['submitted','under_review','approved','enrolled','draft'].includes(active.status)) { %>
+                <a class="btn btn-outline-primary btn-sm" href="/print/assessment?type=<%= active.type %>">🧾 Print Assessment</a>
+              <% } %>
+
+              <% if (active.status === 'draft' || active.status === 'returned') { %>
+                <a class="btn btn-success btn-sm" href="/enroll?step=1">✏ Continue Application</a>
+              <% } %>
+
+              <% if (active.status === 'enrolled' && !active.schedule_confirmed) { %>
+                <form method="post" action="/confirm-schedule" class="d-inline"
+                      data-confirm="Confirm that you have reviewed your class schedule and section assignment?">
+                  <input type="hidden" name="enrollment_id" value="<%= active.id %>">
+                  <button class="btn btn-success btn-sm" type="submit">🗓 Confirm Schedule</button>
+                </form>
+              <% } %>
+
+              <% if (active.status === 'enrolled' && active.schedule_confirmed) { %>
+                <a class="btn btn-success btn-sm" href="/print/cor?type=<%= active.type %>">🖨 Print Certificate of Registration</a>
+              <% } %>
+            </div>
+
+            <!-- Payment panel -->
+            <%
+              var showPayment =
+                (active.type === 'application' && active.status === 'approved') ||
+                (active.type === 'early' && ['submitted','under_review','approved'].includes(active.status));
+            %>
+            <% if (showPayment) { %>
+              <hr>
+              <div class="section-sub">💰 Payment of School Fees</div>
+              <% if (payment && payment.status === 'verified') { %>
+                <div class="alert alert-success py-2 mb-0">Payment verified (<%= h2.peso(payment.amount) %>) —
+                  <% if (active.status === 'enrolled') { %>you're officially enrolled! 🎉<% } else { %>awaiting final approval.<% } %></div>
+              <% } else if (payment && payment.status === 'rejected') { %>
+                <div class="alert alert-danger py-2">Your previous payment proof was rejected:
+                  <%= payment.remarks || '' %>. Please submit again.</div>
+                <%- include('./_payment-form', { active: active, payment: null, assessment: null }) %>
+              <% } else if (payment) { %>
+                <div class="alert alert-info py-2 mb-0">Payment submitted (<%= h2.peso(payment.amount) %>) — pending verification by the cashier. ⏳</div>
+              <% } else { %>
+                <div class="hint mb-2">Payable amount will be assessed at the cashier. Upload your deposit slip photo/PDF
+                  or enter an online payment reference.</div>
+                <%- include('./_payment-form', { active: active, payment: null, assessment: null }) %>
+              <% } %>
+            <% } %>
+          </div>
+        </div>
+      <% } else { %>
+        <!-- No application yet -->
+        <div class="card mb-3">
+          <div class="card-body text-center py-5">
+            <div style="font-size:3rem">📋</div>
+            <h5 class="mt-2">No active application yet</h5>
+            <p class="page-sub">
+              <% if (student.enrollment_type === 'returning') { %>
+                You're a returning student — complete <strong>Early Registration</strong> to reserve your slot for
+                <%= sy ? sy.name : '' %>.
+              <% } else { %>
+                Start your online enrollment application now.
+              <% } %>
+            </p>
+            <div class="d-grid gap-2 mt-3" style="max-width:340px; margin:0 auto">
+              <% if (student.enrollment_type === 'returning') { %>
+                <a class="btn btn-success btn-lg" href="/early">🌱 Start Early Registration</a>
+              <% } else { %>
+                <a class="btn btn-success btn-lg" href="/enroll">📝 Start Enrollment Application</a>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- New student / transferee application shortcuts -->
+      <% if (!application && student.enrollment_type !== 'returning') { %>
+        <div class="alert alert-secondary">
+          Application not started?
+          <% if (newPeriod) { %>
+            <a href="/enroll" class="fw-bold">Start your application →</a>
+          <% } else { %>
+            The enrollment period is currently <strong>closed</strong>. Please wait for the next announcement.
+          <% } %>
+        </div>
+      <% } %>
+      <% if (!early && student.enrollment_type === 'returning') { %>
+        <div class="alert alert-secondary">
+          <% if (earlyPeriod) { %>
+            <a href="/early" class="fw-bold">Start early registration →</a>
+          <% } else { %>
+            Early registration is currently <strong>closed</strong>.
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- ================================ RIGHT COLUMN ============================== -->
+    <div class="col-lg-5">
+      <!-- Application progress -->
+      <% if (application && application.status === 'draft') { %>
+        <div class="card mb-3">
+          <div class="card-header">Application Draft</div>
+          <div class="card-body">
+            <div class="progress mb-2" style="height:10px">
+              <div class="progress-bar bg-success" style="width:<%= progress %>%"></div>
+            </div>
+            <div class="hint mb-2"><%= progress %>% complete</div>
+            <a class="btn btn-success btn-sm w-100" href="/enroll?step=1">▶ Continue Application</a>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Requirements -->
+      <% if (active && reqs && reqs.length) { %>
+        <div class="card mb-3">
+          <div class="card-header">📋 Requirements</div>
+          <div class="card-body">
+            <%
+              var uploaded = {}; docs.forEach(function(d){ uploaded[d.doc_type] = d; });
+            %>
+            <ul class="list-unstyled small mb-2">
+              <% reqs.forEach(function(r) { %>
+                <li class="mb-1">
+                  <% if (uploaded[r.doc_type]) { %><span class="text-success">✔</span>
+                  <% } else { %><span class="text-muted">○</span><% } %>
+                  <%= r.label %>
+                </li>
+              <% }) %>
+            </ul>
+            <a class="btn btn-outline-success btn-sm w-100" href="/documents">Manage Documents</a>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Notifications -->
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between">
+          <span>🔔 Notifications</span>
+          <a href="/notifications" class="small">See all</a>
+        </div>
+        <div class="list-group list-group-flush">
+          <% if (!notices.length) { %>
+            <div class="list-group-item text-muted small">No notifications yet.</div>
+          <% } %>
+          <% notices.slice(0,5).forEach(function(n) { %>
+            <a href="/notifications/<%= n.id %>/read" class="list-group-item list-group-item-action notif-item <%= n.is_read ? '' : 'unread' %>">
+              <div class="small fw-bold"><%= n.title %></div>
+              <div class="hint"><%= n.body %></div>
+              <div class="hint"><%= h2.fmtDateTime(n.created_at) %></div>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- Quick info -->
+      <div class="card">
+        <div class="card-header">ℹ️ Enrollment Info</div>
+        <div class="card-body small">
+          <div class="d-flex justify-content-between mb-1"><span>Account username</span><strong><%= user.login_id %></strong></div>
+          <div class="d-flex justify-content-between mb-1"><span>Type</span><strong class="text-uppercase"><%= student.enrollment_type %></strong></div>
+          <div class="d-flex justify-content-between mb-1"><span>Deadline</span><strong><%= settings.enrollment_deadline || '—' %></strong></div>
+          <div class="d-flex justify-content-between"><span>Contact</span><strong><%= student.contact_number || '—' %></strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

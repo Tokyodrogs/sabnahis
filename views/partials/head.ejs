@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' && title ? title + ' — ' : '' %><%= settings.school_name %> <%= settings.system_title %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="<%= settings.logo_path %>">
+</head>
+<body>
+<%
+  var isStaff = user && user.role !== 'applicant';
+  var path0 = (typeof path !== 'undefined' ? path : '');
+%>
+<nav class="navbar navbar-expand-lg navbar-dark navbar-school no-print">
+  <div class="container">
+    <a class="navbar-brand" href="<%= isStaff ? '/admin' : (user ? '/dashboard' : '/') %>">
+      <span class="brand-mark">
+        <img src="<%= settings.logo_path %>" alt="logo">
+        <span><%= settings.school_name %>
+          <span class="sub d-block" style="font-weight:400"><%= settings.system_title %></span>
+        </span>
+      </span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+            aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <% if (!user) { %>
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/">Home / Log In</a></li>
+          <li class="nav-item"><a class="nav-link" href="/register">Enroll Here</a></li>
+        </ul>
+      <% } else if (!isStaff) { %>
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item"><a class="nav-link <%= path0 === '/dashboard' ? 'active' : '' %>" href="/dashboard">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link <%= path0 === '/documents' ? 'active' : '' %>" href="/documents">My Documents</a></li>
+          <% if (locals.userEnrollmentType && userEnrollmentType === 'returning') { %>
+            <li class="nav-item"><a class="nav-link <%= path0 === '/early' ? 'active' : '' %>" href="/early">Early Registration</a></li>
+          <% } %>
+          <li class="nav-item">
+            <a class="nav-link" href="/notifications">🔔 Notifications
+              <% if (locals.unreadCount && unreadCount > 0) { %><span class="badge-count"><%= unreadCount %></span><% } %>
+            </a>
+          </li>
+          <li class="nav-item ms-lg-2">
+            <form method="post" action="/logout"><button class="btn btn-sm btn-outline-light mt-1 mt-lg-0">Log Out</button></form>
+          </li>
+        </ul>
+      <% } else { %>
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item"><a class="nav-link <%= path0 === '/admin' ? 'active' : '' %>" href="/admin">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link <%= path0.startsWith('/admin/applicants') ? 'active' : '' %>" href="/admin/applicants">Applicants</a></li>
+          <li class="nav-item"><a class="nav-link <%= path0.startsWith('/admin/enrollment') ? 'active' : '' %>" href="/admin/enrollment">Enrollment</a></li>
+          <li class="nav-item"><a class="nav-link <%= path0.startsWith('/admin/academic') ? 'active' : '' %>" href="/admin/academic">Academic</a></li>
+          <li class="nav-item"><a class="nav-link <%= path0.startsWith('/admin/payments') ? 'active' : '' %>" href="/admin/payments">Payments</a></li>
+          <li class="nav-item"><a class="nav-link <%= path0.startsWith('/admin/reports') ? 'active' : '' %>" href="/admin/reports">Reports</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">More</a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="/admin/requirements">Requirements Manager</a></li>
+              <% if (user.role === 'super_admin') { %>
+                <li><a class="dropdown-item" href="/admin/users">Users &amp; Roles</a></li>
+                <li><a class="dropdown-item" href="/admin/settings">Settings</a></li>
+                <li><a class="dropdown-item" href="/admin/audit">Audit Log</a></li>
+              <% } %>
+              <li><hr class="dropdown-divider"></li>
+              <li class="dropdown-item-text small text-muted px-3">
+                <%= user.full_name %> · <span class="text-uppercase"><%= user.role.replace('_',' ') %></span>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item ms-lg-2">
+            <form method="post" action="/logout"><button class="btn btn-sm btn-outline-light mt-1 mt-lg-0">Log Out</button></form>
+          </li>
+        </ul>
+      <% } %>
+    </div>
+  </div>
+</nav>
+
+<% if (typeof flashes !== 'undefined' && flashes.length) { %>
+<div class="container mt-3 no-print">
+  <% flashes.forEach(function(f) { %>
+    <div class="alert alert-<%= f.type %> alert-dismissible fade show py-2" role="alert">
+      <%= f.message %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% }) %>
+</div>
+<% } %>

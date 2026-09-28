@@ -1,0 +1,33 @@
+<form method="post" action="/payment" enctype="multipart/form-data" class="upload-form" id="payForm">
+  <input type="hidden" name="enrollment_id" value="<%= active.id %>">
+  <div class="mb-2">
+    <label class="form-label">Payment Method *</label>
+    <select class="form-select form-select-sm" name="payment_method" id="payMethod" required>
+      <option value="deposit_slip">Deposit slip / payment proof (upload photo or PDF)</option>
+      <option value="online_reference">Online payment reference number</option>
+    </select>
+  </div>
+  <div class="mb-2" id="slipWrap">
+    <label class="form-label">Deposit Slip (JPG / PNG / PDF, max 5 MB) *</label>
+    <input class="form-control form-control-sm" type="file" name="payment_slip" accept=".jpg,.jpeg,.png,.pdf">
+  </div>
+  <div class="mb-2 d-none" id="refWrap">
+    <label class="form-label">Online Payment Reference No. *</label>
+    <input class="form-control form-control-sm" name="payment_reference" placeholder="e.g. GCASH-REF-001234">
+  </div>
+  <button class="btn btn-success btn-sm" type="submit">Submit Payment</button>
+</form>
+<script>
+  (function () {
+    var sel = document.getElementById('payMethod');
+    if (!sel) return;
+    function sync() {
+      var slip = sel.value === 'deposit_slip';
+      document.getElementById('slipWrap').classList.toggle('d-none', !slip);
+      document.getElementById('refWrap').classList.toggle('d-none', slip);
+      var form = document.getElementById('payForm');
+      form.classList.toggle('upload-form', slip);
+    }
+    sel.addEventListener('change', sync); sync();
+  })();
+</script>

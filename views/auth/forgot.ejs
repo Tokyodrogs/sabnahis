@@ -1,0 +1,37 @@
+<%- include('../partials/head', { title: 'Forgot Password' }) %>
+
+<div class="auth-body" style="min-height:70vh">
+  <div class="auth-card">
+    <img class="auth-logo" src="<%= settings.logo_path %>" alt="logo">
+    <h1>Forgot Your Password?</h1>
+    <p class="sub">Enter your account email and we'll send a reset link.</p>
+
+    <% if (sent) { %>
+      <div class="alert alert-success py-2" style="font-size:.85rem">
+        If an account exists for <strong><%= sent.email %></strong>, a reset link was sent.
+      </div>
+      <% if (sent.resetUrl) { %>
+        <div class="alert alert-info py-2" style="font-size:.8rem">
+          📧 Demo mode (also in <code>data/mail.log</code>):<br>
+          <a href="<%= sent.resetUrl %>"><strong>Open password reset link →</strong></a>
+        </div>
+      <% } %>
+      <div class="d-grid gap-2">
+        <a class="btn btn-outline-secondary" href="/">Back to Log In</a>
+      </div>
+    <% } else { %>
+      <form method="post" action="/forgot-password">
+        <div class="mb-3">
+          <label class="form-label" for="email">Email Address</label>
+          <input class="form-control" id="email" name="email" type="email" required placeholder="you@example.com">
+        </div>
+        <div class="d-grid">
+          <button class="btn btn-success fw-bold" type="submit">Send Reset Link</button>
+        </div>
+      </form>
+      <div class="portal-foot mt-3"><a href="/">← Back to Log In</a></div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

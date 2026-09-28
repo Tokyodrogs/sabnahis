@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> — <%= settings.school_name %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="no-print text-center mt-3">
+  <a class="btn btn-outline-secondary btn-sm" href="/dashboard">← Dashboard</a>
+  <button class="btn btn-success btn-sm" onclick="window.print()">🖨 Print</button>
+</div>
+
+<div class="sheet">
+  <div class="sheet-head">
+    <img src="<%= settings.logo_path %>" alt="logo">
+    <div>
+      <p class="school"><%= settings.school_name %></p>
+      <p class="addr"><%= settings.school_address %></p>
+      <p class="addr"><%= settings.school_contact %></p>
+    </div>
+  </div>
+
+  <div class="sheet-title">Enrollment Summary</div>
+  <div class="sheet-sub">
+    School Year <%= full.sy_name %> · Reference No: <strong><%= full.reference_no || '—' %></strong> ·
+    Status: <strong><%= h.STATUS_LABELS[full.status] %></strong>
+  </div>
+
+  <table class="table table-bordered small">
+    <tbody>
+      <tr><th style="width:30%">Student Name</th><td><%= h.fullName(full) %></td></tr>
+      <tr><th>LRN</th><td><%= full.lrn || '—' %></td></tr>
+      <tr><th>Birthdate / Gender</th><td><%= h.fmtDate(full.birthdate) %> · <%= full.gender || '—' %></td></tr>
+      <tr><th>Contact</th><td><%= full.contact_number || '—' %></td></tr>
+      <tr><th>Address</th><td><%= full.home_address || '—' %></td></tr>
+      <tr><th>PSA Birth Cert No.</th><td><%= full.psa_birth_cert_no || '—' %></td></tr>
+      <tr><th>Enrollment Type</th><td class="text-uppercase"><%= full.enrollment_type %></td></tr>
+      <tr><th>Grade Level</th><td><%= full.grade_name %></td></tr>
+      <tr><th>Track / Strand</th><td><%= full.strand_name ? full.strand_code + ' — ' + full.strand_name : 'N/A (Junior High School)' %></td></tr>
+      <tr><th>Section</th><td><%= full.section_name || 'To be assigned' %></td></tr>
+      <% if (edu) { %>
+        <tr><th>School Completed</th><td><%= edu.last_school_name %> (<%= edu.school_year_graded %>) — <%= edu.grade_completed || '' %></td></tr>
+      <% } %>
+      <tr>
+        <th>Parent / Guardian</th>
+        <td>
+          <% guardians.forEach(function(g) { %>
+            <div><span class="text-capitalize"><%= g.relationship %>:</span> <%= h.fullName(g) %>
+              <% if (g.contact_number) { %> · <%= g.contact_number %><% } %></div>
+          <% }) %>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-sub">Status History</div>
+  <table class="table table-bordered small">
+    <thead><tr><th>Status</th><th>Date &amp; Time</th><th>Remarks / By</th></tr></thead>
+    <tbody>
+      <% history.forEach(function(hh) { %>
+        <tr>
+          <td><%= h.STATUS_LABELS[hh.status] || hh.status %></td>
+          <td><%= h.fmtDateTime(hh.created_at) %></td>
+          <td><%= hh.remarks || '' %> <%= hh.changed_by_name ? '(' + hh.changed_by_name + ')' : '' %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <div class="sig-row">
+    <div class="sig"><div class="name"><%= h.fullName(full) %></div><div class="role">Student / Parent</div></div>
+    <div class="sig"><div class="name">____________________</div><div class="role">Registrar</div></div>
+    <div class="sig"><div class="name">____________________</div><div class="role">Principal</div></div>
+  </div>
+  <p class="hint text-center mt-4">Generated <%= h.fmtDateTime(new Date().toISOString()) %> · <%= settings.school_name %> Online Enrollment Module</p>
+</div>
+
+<script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+</body>
+</html>

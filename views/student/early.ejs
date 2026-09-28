@@ -1,0 +1,204 @@
+<%- include('../partials/head') %>
+
+<div class="container page-wrap">
+  <div class="page-title-row">
+    <div>
+      <h1 class="page-title">🌱 Early Registration — Returning Students</h1>
+      <p class="page-sub">Confirm your grade promotion, update your details, choose your strand/section, and settle fees.</p>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" href="/dashboard">← Dashboard</a>
+  </div>
+
+  <% if (returnedRemarks) { %>
+    <div class="alert alert-warning">
+      <strong>⚠ Returned by the registrar:</strong> <%= returnedRemarks %>
+    </div>
+  <% } %>
+
+  <form method="post" action="/early" enctype="multipart/form-data" id="earlyForm">
+    <!-- 1. Promotion confirmation -->
+    <div class="card mb-3">
+      <div class="card-header">1 · Confirm Your Grade Promotion</div>
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label">Current Grade (SY <%= typeof sy !== 'undefined' && sy ? sy.name : '' %>)</label>
+            <input class="form-control" value="<%= currentGrade ? currentGrade.name : '—' %>" disabled>
+          </div>
+          <div class="col-md-1 text-center fs-4 text-success">→</div>
+          <div class="col-md-4">
+            <label class="form-label">Grade Level for Next School Year</label>
+            <input class="form-control fw-bold" value="<%= target ? target.name : '—' %>" disabled>
+            <div class="hint">Auto-promoted. Changes? Contact the registrar.</div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="confirmPromo" required>
+              <label class="form-check-label" for="confirmPromo">I confirm this promotion</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Contact update -->
+    <div class="card mb-3">
+      <div class="card-header">2 · Update Contact Information</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Contact Number *</label>
+            <input class="form-control" name="contact_number" required value="<%= student.contact_number || '' %>" placeholder="09XX XXX XXXX">
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">Home Address *</label>
+            <input class="form-control" name="home_address" required value="<%= student.home_address || '' %>">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Strand & section -->
+    <div class="card mb-3">
+      <div class="card-header">3 · Track / Strand &amp; Section Choice</div>
+      <div class="card-body">
+        <% if (isShs) { %>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Choose Your Strand (Grade 11) *</label>
+              <select class="form-select" name="strand_id" id="strandSel" required>
+                <option value="">— select strand —</option>
+                <% strands.forEach(function(s) { %>
+                  <option value="<%= s.id %>" <%= early.strand_id === s.id ? 'selected' : '' %>>
+                    <%= s.code %> — <%= s.name %>
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <div class="assigned-section">
+                <strong>🎓 <%= target ? target.name : 'Grade 11' %></strong> — strand selection is required
+                when moving from Grade 10 to Grade 11.
+              </div>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="assigned-section mb-3">
+            <strong>🎓 <%= target ? target.name : '' %></strong> — no strand selection needed for Junior High School.
+          </div>
+        <% } %>
+
+        <label class="form-label">Preferred Section<%= isShs ? ' (after choosing strand)' : '' %> (optional)</label>
+        <select class="form-select" name="section_id">
+          <option value="">— let the registrar assign a section —</option>
+          <% (sections || []).forEach(function(s) { %>
+            <% if (!isShs || !s.strand_id || (early.strand_id && s.strand_id === early.strand_id)) { %>
+              <option value="<%= s.id %>" <%= early.section_id === s.id ? 'selected' : '' %>>
+                <%= s.name %>
+                <% if (s.strand) { %> (<%= s.strand.code %>)<% } %>
+                — <%= s.remaining %> of <%= s.capacity %> slots left
+              </option>
+            <% } %>
+          <% }) %>
+        </select>
+        <div class="hint">Sections with free slots are shown. Full sections cannot be selected.</div>
+
+        <button class="btn btn-outline-success btn-sm mt-3" type="submit" name="action" value="preview">
+          🔄 Update Assessment Preview
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. Assessment -->
+    <div class="card mb-3">
+      <div class="card-header">4 · Assessment of School Fees</div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead><tr><th>Fee</th><th>Category</th><th class="text-end">Amount</th></tr></thead>
+            <tbody>
+              <% if (!assessment.fees.length) { %>
+                <tr><td colspan="3" class="text-muted">No fees configured yet — choose your strand and click "Update Assessment Preview".</td></tr>
+              <% } %>
+              <% assessment.fees.forEach(function(f) { %>
+                <tr>
+                  <td><%= f.name %></td>
+                  <td class="text-capitalize"><%= f.category %></td>
+                  <td class="text-end"><%= PAY(f.amount) %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+            <tfoot>
+              <tr class="table-success">
+                <th colspan="2">TOTAL ASSESSMENT</th>
+                <th class="text-end"><%= PAY(assessment.total) %></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="hint">Fees are based on the selected grade level and strand. Tuition, miscellaneous, laboratory,
+          uniform and book fees as configured by the school.</div>
+      </div>
+    </div>
+
+    <!-- 5. Payment -->
+    <div class="card mb-3">
+      <div class="card-header">5 · Payment (optional at this step)</div>
+      <div class="card-body">
+        <% if (payment && payment.status !== 'rejected') { %>
+          <div class="alert alert-<%= payment.status === 'verified' ? 'success' : 'info' %> py-2 mb-0">
+            A payment record already exists: <%= PAY(payment.amount) %> — <strong><%= payment.status %></strong>.
+          </div>
+        <% } else { %>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Payment Method</label>
+              <select class="form-select" name="payment_method" id="earlyPayMethod">
+                <option value="">— skip for now, pay later —</option>
+                <option value="deposit_slip">Deposit slip (upload proof)</option>
+                <option value="online_reference">Online payment reference</option>
+              </select>
+            </div>
+            <div class="col-md-4" id="earlySlipWrap">
+              <label class="form-label">Deposit Slip (PDF/JPG/PNG ≤ 5 MB)</label>
+              <input class="form-control" type="file" name="payment_slip" accept=".jpg,.jpeg,.png,.pdf">
+            </div>
+            <div class="col-md-4" id="earlyRefWrap">
+              <label class="form-label">Payment Reference No.</label>
+              <input class="form-control" name="payment_reference" placeholder="e.g. GCASH-REF-001234">
+            </div>
+          </div>
+          <div class="hint mt-2">You may also pay after the registrar approves your registration.</div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+      <a href="/dashboard" class="btn btn-outline-secondary">← Dashboard</a>
+      <button class="btn btn-success px-5 fw-bold" type="submit" name="action" value="submit"
+              data-confirm-link="Submit your early registration?">✔ Submit Early Registration</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  (function () {
+    var methodSel = document.getElementById('earlyPayMethod');
+    if (methodSel) {
+      function sync() {
+        var v = methodSel.value;
+        document.getElementById('earlySlipWrap').style.display = v === 'deposit_slip' ? '' : 'none';
+        document.getElementById('earlyRefWrap').style.display = v === 'online_reference' ? '' : 'none';
+      }
+      methodSel.addEventListener('change', sync); sync();
+    }
+    // data-confirm on a button inside a form: attach handler to the form
+    document.querySelectorAll('button[data-confirm-link]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        if (!window.confirm(btn.getAttribute('data-confirm-link'))) e.preventDefault();
+      });
+    });
+  })();
+</script>
+
+<%- include('../partials/foot') %>
